@@ -3,258 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard de Cambios - Seidor</title>
+<title>Timeline Cambios - Seidor</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-    background: #f5f5f3;
-    color: #1a1a1a;
-    font-size: 13px;
-    padding: 32px 24px;
-  }
-  .container { max-width: 1200px; margin: 0 auto; }
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #ddd;
-  }
-  .header-title { font-size: 20px; font-weight: 600; color: #111; }
-  .header-sub { font-size: 12px; color: #777; margin-top: 4px; }
-  .header-meta { text-align: right; font-size: 11px; color: #888; line-height: 1.7; }
-  .kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .kpi { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px 16px; }
-  .kpi.danger { border-color: #f09595; }
-  .kpi-label { font-size: 11px; color: #888; margin-bottom: 4px; }
-  .kpi-val { font-size: 26px; font-weight: 600; color: #111; line-height: 1; }
-  .kpi-val.red { color: #a32d2d; }
-  .kpi-sub { font-size: 11px; color: #aaa; margin-top: 4px; }
-  .kpi-sub.red { color: #c05050; }
-  .alerta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #fff5f5;
-    border: 1px solid #f09595;
-    border-radius: 8px;
-    padding: 10px 14px;
-    margin-bottom: 20px;
-    font-size: 12px;
-    color: #791f1f;
-  }
-  .alerta.hidden { display: none; }
-  .section-title {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: #999;
-    margin-bottom: 10px;
-  }
-  .table-wrap { border: 1px solid #e8e8e8; border-radius: 10px; overflow: hidden; background: #fff; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
-  thead th {
-    text-align: left;
-    font-size: 10px;
-    font-weight: 600;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 8px 10px;
-    background: #fafafa;
-    border-bottom: 1px solid #e8e8e8;
-  }
-  tbody tr { border-bottom: 1px solid #f0f0f0; }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr.cruce-row { background: #fff8f8; }
-  tbody td { padding: 8px 10px; vertical-align: middle; color: #222; word-break: break-word; }
-  .day-header td {
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #888;
-    background: #f7f7f7;
-    padding: 5px 10px;
-    border-bottom: 1px solid #ececec;
-  }
-  .chg { font-size: 11px; font-family: 'Courier New', monospace; color: #999; }
-  .empresa { font-weight: 600; font-size: 12px; }
-  .asunto-text { font-size: 11px; color: #555; line-height: 1.5; }
-  .fecha-text { font-size: 11px; white-space: nowrap; color: #333; }
-  .fecha-cruce { font-size: 11px; white-space: nowrap; color: #a32d2d; font-weight: 600; }
-  .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
-  .badge-obs { white-space: normal; }
-  .badge-pdt       { background: #faeeda; color: #633806; }
-  .badge-plantilla { background: #eaf3de; color: #27500a; }
-  .badge-cruce     { background: #fcebeb; color: #791f1f; }
-  .badge-ok        { background: #e1f5ee; color: #085041; }
-  .badge-obs       { background: #fff3e0; color: #854f0b; }
-  .eq { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
-  .eq-basis-infra   { background: #eeedfe; color: #3c3489; }
-  .eq-infra-basis   { background: #e6f1fb; color: #0c447c; }
-  .eq-basis         { background: #eeedfe; color: #3c3489; }
-  .eq-infra         { background: #e6f1fb; color: #0c447c; }
-  .eq-basis-cliente { background: #fbeaf0; color: #72243e; }
-  .legend { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: 11px; color: #888; }
-  .legend-item { display: flex; align-items: center; gap: 5px; }
-  .loading { text-align: center; padding: 40px; color: #888; font-size: 13px; }
-  .error-msg {
-    background: #fff5f5; border: 1px solid #f09595; border-radius: 8px;
-    padding: 12px 16px; color: #791f1f; font-size: 12px; margin-bottom: 16px; display: none;
-  }
-  @media (max-width: 700px) {
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-    .header { flex-direction: column; gap: 8px; }
-    .header-meta { text-align: left; }
-  }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f5f5f3; padding: 24px; font-size: 12px; }
+.titulo { font-size: 18px; font-weight: 600; color: #111; margin-bottom: 4px; }
+.subtitulo { font-size: 11px; color: #888; margin-bottom: 20px; }
+.leyenda { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
+.ley-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #555; }
+.ley-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.brecha-pill { background: #f0fdf4; border: 1px dashed #86efac; border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #166534; }
+.loading { text-align: center; padding: 40px; color: #888; font-size: 13px; }
+.error-msg { background: #fff5f5; border: 1px solid #f09595; border-radius: 8px; padding: 12px 16px; color: #791f1f; font-size: 12px; margin-bottom: 16px; display: none; }
+
+.dia-bloque { margin-bottom: 24px; }
+.dia-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; color: #888;
+  padding: 5px 10px; background: #e9e9e7;
+  border-radius: 5px; display: inline-block; margin-bottom: 8px;
+}
+.brecha-card {
+  display: flex; align-items: center; gap: 8px;
+  background: #f0fdf4; border: 1px dashed #86efac;
+  border-radius: 6px; padding: 6px 12px;
+  font-size: 11px; color: #166534;
+  margin: 4px 0 4px 130px;
+}
+.fila { display: flex; align-items: center; gap: 0; margin-bottom: 5px; }
+.hora { width: 130px; flex-shrink: 0; font-size: 10px; color: #aaa; text-align: right; padding-right: 12px; font-variant-numeric: tabular-nums; line-height: 1.7; }
+.hora .h-ini { color: #555; font-size: 11px; }
+.hora .h-fin { color: #bbb; font-size: 10px; }
+.card {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  background: #fff; border: 1px solid #e8e8e8;
+  border-radius: 8px; padding: 8px 12px;
+}
+.card.cruce { border-color: #fca5a5; background: #fff8f8; }
+.card.pend  { border-color: #fcd34d; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.d-bi { background: #7c6fe0; }
+.d-ib { background: #3b82f6; }
+.d-b  { background: #7c6fe0; }
+.d-i  { background: #3b82f6; }
+.d-bc { background: #ec4899; }
+.chg  { font-size: 10px; font-family: monospace; color: #bbb; flex-shrink: 0; width: 90px; }
+.emp  { font-weight: 600; font-size: 12px; color: #111; flex-shrink: 0; width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asun { font-size: 11px; color: #666; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+.b-pdt  { background: #faeeda; color: #633806; }
+.b-plt  { background: #eaf3de; color: #27500a; }
+.b-ok   { background: #e1f5ee; color: #085041; }
+.b-cruce{ background: #fcebeb; color: #791f1f; }
+.b-obs  { background: #fff3e0; color: #854f0b; }
+.eq { display: inline-block; font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+.e-bi { background: #eeedfe; color: #3c3489; }
+.e-ib { background: #e6f1fb; color: #0c447c; }
+.e-b  { background: #eeedfe; color: #3c3489; }
+.e-i  { background: #e6f1fb; color: #0c447c; }
+.e-bc { background: #fbeaf0; color: #72243e; }
 </style>
 </head>
 <body>
-<div class="container">
 
-  <div class="header">
-    <div>
-      <p class="header-title" id="titulo">Cargando dashboard...</p>
-      <p class="header-sub" id="ventana"></p>
-    </div>
-    <div class="header-meta">
-      <div id="exportado"></div>
-      <div id="reunion"></div>
-    </div>
-  </div>
+<p class="titulo" id="titulo">Timeline de Cambios - Seidor</p>
+<p class="subtitulo">Vista cronológica · Brechas verdes = ventana libre entre fin de un cambio e inicio del siguiente</p>
 
-  <div class="kpi-grid">
-    <div class="kpi">
-      <p class="kpi-label">Total cambios</p>
-      <p class="kpi-val" id="kpi-total">—</p>
-      <p class="kpi-sub">semana actual</p>
-    </div>
-    <div class="kpi">
-      <p class="kpi-label">Con plan de trabajo PDT</p>
-      <p class="kpi-val" id="kpi-pdt">—</p>
-      <p class="kpi-sub" id="kpi-pdt-pct"></p>
-    </div>
-    <div class="kpi">
-      <p class="kpi-label">Con plantilla automática</p>
-      <p class="kpi-val" id="kpi-plantilla">—</p>
-      <p class="kpi-sub" id="kpi-plantilla-pct"></p>
-    </div>
-    <div class="kpi danger">
-      <p class="kpi-label" style="color:#a32d2d;">Cruces de horario</p>
-      <p class="kpi-val red" id="kpi-cruces">—</p>
-      <p class="kpi-sub red" id="kpi-cruces-sub"></p>
-    </div>
-  </div>
-
-  <div class="alerta hidden" id="alerta-cruce">
-    <span style="font-size:16px;">&#9651;</span>
-    <span id="alerta-texto"></span>
-  </div>
-
-  <div class="error-msg" id="error-msg">
-    ⚠ No se pudo cargar la data desde Google Sheets. Verifica que el documento esté publicado en la web.
-  </div>
-
-  <p class="section-title">Listado completo de cambios</p>
-  <div class="table-wrap">
-    <div class="loading" id="loading">Cargando datos desde Google Sheets...</div>
-    <table id="tabla" style="display:none;">
-      <colgroup>
-        <col style="width:100px">
-        <col style="width:100px">
-        <col style="width:140px">
-        <col style="width:auto">
-        <col style="width:72px">
-        <col style="width:170px">
-        <col style="width:120px">
-      </colgroup>
-      <thead>
-        <tr>
-          <th>Número</th>
-          <th>Fecha / Hora</th>
-          <th>Empresa</th>
-          <th>Asunto</th>
-          <th>Plan</th>
-          <th>Equipos involucrados</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
-
-  <div class="legend">
-    <span style="color:#aaa; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;">Leyenda:</span>
-    <span class="legend-item"><span class="badge badge-pdt">PDT</span> Plan de trabajo adjunto (Excel)</span>
-    <span class="legend-item"><span class="badge badge-plantilla">Plantilla</span> Plantilla automática ServiceNow</span>
-    <span class="legend-item"><span class="badge badge-cruce">Cruce</span> Mismo horario, mismo equipo líder</span>
-    <span class="legend-item"><span class="badge badge-obs">⏳ PDT pendiente</span> Observación activa en ServiceNow</span>
-  </div>
-
+<div class="leyenda">
+  <span class="ley-item"><span class="ley-dot" style="background:#7c6fe0"></span> Basis lidera</span>
+  <span class="ley-item"><span class="ley-dot" style="background:#3b82f6"></span> Infraestructura lidera</span>
+  <span class="ley-item"><span class="ley-dot" style="background:#ec4899"></span> Basis + Cliente</span>
+  <span class="brecha-pill">🟢 Brecha = tiempo libre para nuevos cambios</span>
 </div>
 
-<script>
-const SHEET_ID  = '1S51X-wXdciEUUoO59cpA7a5YWUingRVy';
-const GID       = '1642322447';
-const JSON_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID}`;
+<div class="error-msg" id="error-msg">⚠ No se pudo cargar la data desde Google Sheets. Verifica que el documento esté publicado en la web.</div>
+<div class="loading" id="loading">Cargando datos desde Google Sheets...</div>
+<div id="tl"></div>
 
-const DIAS  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+<script>
+const SHEET_ID = '1S51X-wXdciEUUoO59cpA7a5YWUingRVy';
+const GID      = '1642322447';
+const JSON_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID}`;
+
+const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const p2 = n => String(n).padStart(2,'0');
+const fmtH = d => d ? `${p2(d.getHours())}:${p2(d.getMinutes())}` : '--:--';
+const diffH = (a,b) => Math.round((b-a)/360000)/10;
+const dayKey = d => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+const dayLbl = d => `${DIAS[d.getDay()]} ${p2(d.getDate())}/${p2(d.getMonth()+1)}`;
 
 function parseFechaGviz(val) {
   if (!val) return null;
-  // gviz Date format: "Date(2026,5,18,22,0,0)" (month 0-indexed)
   const m = String(val).match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+)/);
   if (m) return new Date(+m[1], +m[2], +m[3], +m[4], +m[5]);
-  // fallback string
   const s = String(val).match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})\s+(\d{1,2}):(\d{2})/);
   if (s) return new Date(+s[3], +s[2]-1, +s[1], +s[4], +s[5]);
   return null;
 }
 
-function formatFecha(d) {
-  if (!d) return '';
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
-
-function dayLabel(d) {
-  return `${DIAS[d.getDay()]} ${d.getDate()} ${MESES[d.getMonth()]}`;
-}
-
-function equipoClass(eq) {
+function equipoKey(eq) {
   const e = (eq||'').toLowerCase();
-  if (e.startsWith('basis') && e.includes('infra')) return 'eq-basis-infra';
-  if (e.startsWith('infra') && e.includes('basis')) return 'eq-infra-basis';
-  if (e.startsWith('basis') && e.includes('cliente')) return 'eq-basis-cliente';
-  if (e.startsWith('basis')) return 'eq-basis';
-  if (e.startsWith('infra')) return 'eq-infra';
-  return 'eq-basis';
+  if (e.startsWith('basis') && e.includes('infra')) return 'bi';
+  if (e.startsWith('infra') && e.includes('basis')) return 'ib';
+  if (e.startsWith('basis') && e.includes('cliente')) return 'bc';
+  if (e.startsWith('basis')) return 'b';
+  return 'i';
 }
 
-function equipoLabel(eq) {
-  const e = (eq||'').toLowerCase();
-  if (e.startsWith('basis') && e.includes('infra')) return 'Basis + Infraestructura';
-  if (e.startsWith('infra') && e.includes('basis')) return 'Infraestructura + Basis';
-  if (e.startsWith('basis') && e.includes('cliente')) return 'Basis + Cliente';
-  if (e.startsWith('basis')) return 'Basis';
-  if (e.startsWith('infra')) return 'Infraestructura';
-  return eq;
-}
+const dotCls = {bi:'d-bi',ib:'d-ib',b:'d-b',i:'d-i',bc:'d-bc'};
+const eqCls  = {bi:'e-bi',ib:'e-ib',b:'e-b',i:'e-i',bc:'e-bc'};
+const eqLbl  = {bi:'Basis + Infra',ib:'Infra + Basis',b:'Basis',i:'Infraestructura',bc:'Basis + Cliente'};
 
 function equipoLider(eq) {
   const e = (eq||'').toLowerCase();
   if (e.startsWith('basis')) return 'basis';
-  if (e.startsWith('infra')) return 'infra';
-  return e;
+  return 'infra';
 }
 
 function detectCruces(rows) {
@@ -262,10 +126,10 @@ function detectCruces(rows) {
   for (let i = 0; i < rows.length; i++) {
     for (let j = i+1; j < rows.length; j++) {
       const a = rows[i], b = rows[j];
-      if (!a._fecha || !b._fecha) continue;
-      if (a._fecha.getTime() !== b._fecha.getTime()) continue;
+      if (!a.ini || !b.ini) continue;
+      if (a.ini.getTime() !== b.ini.getTime()) continue;
       if (equipoLider(a.equipo) === equipoLider(b.equipo)) {
-        cruces.add(a.numero); cruces.add(b.numero);
+        cruces.add(a.chg); cruces.add(b.chg);
       }
     }
   }
@@ -273,123 +137,114 @@ function detectCruces(rows) {
 }
 
 function render(rows) {
-  rows.sort((a,b) => (!a._fecha?1:!b._fecha?-1:a._fecha-b._fecha));
+  rows.sort((a,b) => a.ini - b.ini);
   const cruces = detectCruces(rows);
 
-  const total     = rows.length;
-  const pdt       = rows.filter(r => r.plan.toLowerCase().includes('pdt')).length;
-  const plantilla = rows.filter(r => r.plan.toLowerCase().includes('plantilla')).length;
-  const nCruces   = cruces.size / 2;
-
-  document.getElementById('kpi-total').textContent     = total;
-  document.getElementById('kpi-pdt').textContent       = pdt;
-  document.getElementById('kpi-pdt-pct').textContent   = total ? `${Math.round(pdt/total*100)}% del total` : '';
-  document.getElementById('kpi-plantilla').textContent = plantilla;
-  document.getElementById('kpi-plantilla-pct').textContent = total ? `${Math.round(plantilla/total*100)}% del total` : '';
-  document.getElementById('kpi-cruces').textContent    = Math.round(nCruces);
-  document.getElementById('kpi-cruces-sub').textContent = nCruces > 0 ? 'requiere atención' : 'sin cruces';
-
-  const fechas = rows.filter(r=>r._fecha).map(r=>r._fecha);
+  // Update title
+  const fechas = rows.filter(r=>r.ini).map(r=>r.ini);
   if (fechas.length) {
     const minF = fechas.reduce((a,b)=>a<b?a:b);
     const maxF = fechas.reduce((a,b)=>a>b?a:b);
-    const fmt = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
-    document.getElementById('titulo').textContent = `Cambios del ${fmt(minF)} Jun al ${fmt(maxF)} Jun ${maxF.getFullYear()}`;
-    document.getElementById('ventana').textContent = `Ventana: ${DIAS[minF.getDay()]} ${fmt(minF)} 11:00 AM → ${DIAS[maxF.getDay()]} ${fmt(maxF)} 23:59 PM`;
-    document.getElementById('reunion').textContent = `Reunión: ${DIAS[minF.getDay()]} ${fmt(minF)}/${minF.getFullYear()}`;
+    const fmt = d => `${p2(d.getDate())} ${MESES[d.getMonth()]}`;
+    document.getElementById('titulo').textContent = `Timeline — Cambios del ${fmt(minF)} al ${fmt(maxF)} ${maxF.getFullYear()}`;
   }
 
-  const hoy = new Date();
-  const ds = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  document.getElementById('exportado').textContent = `Exportado: ${ds[hoy.getDay()]} ${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}/${hoy.getFullYear()}`;
+  // Group by day
+  const days = {};
+  rows.forEach(c => {
+    const k = dayKey(c.ini);
+    if(!days[k]) days[k] = {lbl: dayLbl(c.ini), items:[]};
+    days[k].items.push(c);
+  });
 
-  if (cruces.size > 0) {
-    const cruceRows = rows.filter(r => cruces.has(r.numero));
-    const empresas = [...new Set(cruceRows.map(r=>r.empresa))].join(', ');
-    const nums = [...cruces].join(' y ');
-    document.getElementById('alerta-cruce').classList.remove('hidden');
-    document.getElementById('alerta-texto').innerHTML = `<strong>Cruce detectado:</strong> ${nums} &mdash; ${empresas}. Coordinar ejecución secuencial.`;
-  }
+  const tl = document.getElementById('tl');
+  tl.innerHTML = '';
 
-  const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '';
-  let lastDay = '';
+  Object.keys(days).forEach(dk => {
+    const day = days[dk];
+    const bloque = document.createElement('div');
+    bloque.className = 'dia-bloque';
+    bloque.innerHTML = `<div class="dia-label">${day.lbl}</div>`;
 
-  rows.forEach(r => {
-    const f = r._fecha;
-    const dayKey = f ? `${f.getFullYear()}-${f.getMonth()}-${f.getDate()}` : 'x';
-    if (dayKey !== lastDay) {
-      lastDay = dayKey;
-      const tr = document.createElement('tr');
-      tr.className = 'day-header';
-      tr.innerHTML = `<td colspan="7">${f ? dayLabel(f) : 'Sin fecha'}</td>`;
-      tbody.appendChild(tr);
-    }
+    day.items.forEach(c => {
+      const idx = rows.indexOf(c);
 
-    const esCruce = cruces.has(r.numero);
-    const obs = (r.observacion||'').toLowerCase().includes('pendiente');
-    const planBadge = r.plan.toLowerCase().includes('pdt')
-      ? `<span class="badge badge-pdt">PDT</span>`
-      : `<span class="badge badge-plantilla">Plantilla</span>`;
-    const estadoBadge = esCruce
-      ? `<span class="badge badge-cruce">Cruce</span>`
-      : obs ? `<span class="badge badge-obs">⏳ PDT pendiente</span>`
-             : `<span class="badge badge-ok">OK</span>`;
-    const fechaHTML = esCruce
-      ? `<span class="fecha-cruce">${formatFecha(f)} &#9651;</span>`
-      : `<span class="fecha-text">${formatFecha(f)}</span>`;
+      // Brecha: entre fin anterior e inicio actual
+      if (idx > 0) {
+        const prev = rows[idx-1];
+        if (prev.fin && c.ini) {
+          const horas = diffH(prev.fin, c.ini);
+          if (horas >= 4) {
+            const br = document.createElement('div');
+            br.className = 'brecha-card';
+            br.innerHTML = `🟢 <strong>Brecha de ${horas}h</strong> &nbsp;·&nbsp; Fin anterior: ${fmtH(prev.fin)} → Inicio: ${fmtH(c.ini)} — disponible para nuevos cambios`;
+            bloque.appendChild(br);
+          }
+        }
+      }
 
-    const tr = document.createElement('tr');
-    if (esCruce) tr.className = 'cruce-row';
-    tr.innerHTML = `
-      <td><span class="chg">${r.numero}</span></td>
-      <td>${fechaHTML}</td>
-      <td><span class="empresa">${r.empresa}</span></td>
-      <td><span class="asunto-text">${r.asunto}</span></td>
-      <td>${planBadge}</td>
-      <td><span class="eq ${equipoClass(r.equipo)}">${equipoLabel(r.equipo)}</span></td>
-      <td>${estadoBadge}</td>`;
-    tbody.appendChild(tr);
+      const esCruce = cruces.has(c.chg);
+      const esPend  = (c.obs||'').toLowerCase().includes('pendiente');
+      const eq      = equipoKey(c.equipo);
+      const planB   = (c.plan||'').toLowerCase().includes('pdt')
+        ? `<span class="badge b-pdt">PDT</span>`
+        : `<span class="badge b-plt">Plantilla</span>`;
+      const estB = esCruce
+        ? `<span class="badge b-cruce">⚠ Cruce</span>`
+        : esPend ? `<span class="badge b-obs">⏳ PDT pend.</span>`
+                 : `<span class="badge b-ok">OK</span>`;
+
+      const fila = document.createElement('div');
+      fila.className = 'fila';
+      fila.innerHTML = `
+        <div class="hora">
+          <span class="h-ini">${fmtH(c.ini)}</span>
+          <span class="h-fin">${fmtH(c.fin)}</span>
+        </div>
+        <div class="card${esCruce?' cruce':''}${esPend?' pend':''}">
+          <span class="dot ${dotCls[eq]||'d-b'}"></span>
+          <span class="chg">${c.chg}</span>
+          <span class="emp" title="${c.emp}">${c.emp}</span>
+          <span class="asun" title="${c.asun}">${c.asun}</span>
+          <span class="eq ${eqCls[eq]||'e-b'}">${eqLbl[eq]||c.equipo}</span>
+          ${planB}
+          ${estB}
+        </div>`;
+      bloque.appendChild(fila);
+    });
+
+    tl.appendChild(bloque);
   });
 
   document.getElementById('loading').style.display = 'none';
-  document.getElementById('tabla').style.display = 'table';
 }
 
 fetch(JSON_URL)
   .then(r => r.text())
   .then(text => {
-    // gviz returns /*O_o*/\ngoogle.visualization.Query.setResponse({...});
     const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/)[1]);
-    const cols = json.table.cols.map(c => c.label);
     const rows = json.table.rows
-      .filter(r => r && r.c && r.c[0] && r.c[0].v && !String(r.c[0].v).includes("Número"))
+      .filter(r => r && r.c && r.c[0] && r.c[0].v)
       .map(r => {
         const get = i => (r.c[i] && r.c[i].v != null) ? r.c[i].v : '';
-        // cols: Número, Fecha de inicio planificada, Empresa, Asunto, Plan de trabajo, Equipos involucrados, Observación
         return {
-          numero:      String(get(0)).trim(),
-          _fecha:      parseFechaGviz(get(1)),
-          empresa:     String(get(2)).trim(),
-          asunto:      String(get(3)).trim(),
-          plan:        String(get(4)).trim(),
-          equipo:      String(get(5)).trim(),
-          observacion: String(get(6)).trim(),
+          chg:    String(get(0)).trim(),
+          ini:    parseFechaGviz(get(1)),
+          fin:    parseFechaGviz(get(2)),
+          emp:    String(get(3)).trim(),
+          asun:   String(get(4)).trim(),
+          plan:   String(get(5)).trim(),
+          equipo: String(get(6)).trim(),
+          obs:    String(get(7)).trim(),
         };
-      });
+      })
+      .filter(r => r.ini);
     render(rows);
   })
   .catch(err => {
     console.error(err);
     document.getElementById('loading').style.display = 'none';
     document.getElementById('error-msg').style.display = 'block';
-    document.getElementById('tabla').style.display = 'table';
-    document.getElementById('kpi-total').textContent = '0';
-    document.getElementById('kpi-pdt').textContent = '0';
-    document.getElementById('kpi-plantilla').textContent = '0';
-    document.getElementById('kpi-cruces').textContent = '0';
-    document.getElementById('kpi-cruces-sub').textContent = 'sin cruces';
-    document.getElementById('titulo').textContent = 'Dashboard de Cambios - Seidor';
   });
 </script>
 </body>
