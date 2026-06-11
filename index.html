@@ -31,12 +31,7 @@
     gap: 12px;
     margin-bottom: 20px;
   }
-  .kpi {
-    background: #fff;
-    border: 1px solid #e8e8e8;
-    border-radius: 8px;
-    padding: 14px 16px;
-  }
+  .kpi { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px 16px; }
   .kpi.danger { border-color: #f09595; }
   .kpi-label { font-size: 11px; color: #888; margin-bottom: 4px; }
   .kpi-val { font-size: 26px; font-weight: 600; color: #111; line-height: 1; }
@@ -64,12 +59,7 @@
     color: #999;
     margin-bottom: 10px;
   }
-  .table-wrap {
-    border: 1px solid #e8e8e8;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #fff;
-  }
+  .table-wrap { border: 1px solid #e8e8e8; border-radius: 10px; overflow: hidden; background: #fff; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
   thead th {
     text-align: left;
@@ -101,58 +91,25 @@
   .asunto-text { font-size: 11px; color: #555; line-height: 1.5; }
   .fecha-text { font-size: 11px; white-space: nowrap; color: #333; }
   .fecha-cruce { font-size: 11px; white-space: nowrap; color: #a32d2d; font-weight: 600; }
-  .badge {
-    display: inline-block;
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 4px;
-    white-space: nowrap;
-  }
+  .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
   .badge-obs { white-space: normal; }
   .badge-pdt       { background: #faeeda; color: #633806; }
   .badge-plantilla { background: #eaf3de; color: #27500a; }
   .badge-cruce     { background: #fcebeb; color: #791f1f; }
   .badge-ok        { background: #e1f5ee; color: #085041; }
   .badge-obs       { background: #fff3e0; color: #854f0b; }
-  .eq {
-    display: inline-block;
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 4px;
-    white-space: nowrap;
-  }
+  .eq { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
   .eq-basis-infra   { background: #eeedfe; color: #3c3489; }
   .eq-infra-basis   { background: #e6f1fb; color: #0c447c; }
   .eq-basis         { background: #eeedfe; color: #3c3489; }
   .eq-infra         { background: #e6f1fb; color: #0c447c; }
   .eq-basis-cliente { background: #fbeaf0; color: #72243e; }
-  .legend {
-    margin-top: 16px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    font-size: 11px;
-    color: #888;
-  }
+  .legend { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: 11px; color: #888; }
   .legend-item { display: flex; align-items: center; gap: 5px; }
-  .loading {
-    text-align: center;
-    padding: 40px;
-    color: #888;
-    font-size: 13px;
-  }
+  .loading { text-align: center; padding: 40px; color: #888; font-size: 13px; }
   .error-msg {
-    background: #fff5f5;
-    border: 1px solid #f09595;
-    border-radius: 8px;
-    padding: 12px 16px;
-    color: #791f1f;
-    font-size: 12px;
-    margin-bottom: 16px;
-    display: none;
+    background: #fff5f5; border: 1px solid #f09595; border-radius: 8px;
+    padding: 12px 16px; color: #791f1f; font-size: 12px; margin-bottom: 16px; display: none;
   }
   @media (max-width: 700px) {
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
@@ -246,65 +203,35 @@
 </div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────────────
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkdTBJYN3X_cz66NU0vMJhHRsmMv6OHymsdjRluermJfBFoxrJDsUAbWRCRXThrw/pub?gid=1642322447&single=true&output=csv";
+const SHEET_ID  = '1S51X-wXdciEUUoO59cpA7a5YWUingRVy';
+const GID       = '1642322447';
+const JSON_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID}`;
 
-// ── HELPERS ─────────────────────────────────────────────────────────────────
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  // Skip first row (empty/header row 1), use row 2 as headers
-  const headers = lines[1].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-  const rows = [];
-  for (let i = 2; i < lines.length; i++) {
-    const vals = splitCSVLine(lines[i]);
-    if (vals.length < 2 || !vals[0]) continue;
-    const obj = {};
-    headers.forEach((h, idx) => obj[h] = (vals[idx] || '').trim().replace(/^"|"$/g, ''));
-    rows.push(obj);
-  }
-  return rows;
-}
+const DIAS  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
-function splitCSVLine(line) {
-  const result = [];
-  let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') { inQ = !inQ; }
-    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
-    else { cur += c; }
-  }
-  result.push(cur);
-  return result;
-}
-
-function parseFecha(str) {
-  // Handles "18-06-2026 22:00:00" or "18/06/2026 22:00"
-  if (!str) return null;
-  const clean = str.replace(/['"]/g, '').trim();
-  const m = clean.match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})\s+(\d{1,2}):(\d{2})/);
-  if (!m) return null;
-  return new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5]);
+function parseFechaGviz(val) {
+  if (!val) return null;
+  // gviz Date format: "Date(2026,5,18,22,0,0)" (month 0-indexed)
+  const m = String(val).match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+)/);
+  if (m) return new Date(+m[1], +m[2], +m[3], +m[4], +m[5]);
+  // fallback string
+  const s = String(val).match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})\s+(\d{1,2}):(\d{2})/);
+  if (s) return new Date(+s[3], +s[2]-1, +s[1], +s[4], +s[5]);
+  return null;
 }
 
 function formatFecha(d) {
   if (!d) return '';
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const hh = String(d.getHours()).padStart(2,'0');
-  const mn = String(d.getMinutes()).padStart(2,'0');
-  return `${dd}/${mm} ${hh}:${mn}`;
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
-
-const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
 function dayLabel(d) {
   return `${DIAS[d.getDay()]} ${d.getDate()} ${MESES[d.getMonth()]}`;
 }
 
 function equipoClass(eq) {
-  const e = (eq || '').toLowerCase().trim();
+  const e = (eq||'').toLowerCase();
   if (e.startsWith('basis') && e.includes('infra')) return 'eq-basis-infra';
   if (e.startsWith('infra') && e.includes('basis')) return 'eq-infra-basis';
   if (e.startsWith('basis') && e.includes('cliente')) return 'eq-basis-cliente';
@@ -314,7 +241,7 @@ function equipoClass(eq) {
 }
 
 function equipoLabel(eq) {
-  const e = (eq || '').toLowerCase().trim();
+  const e = (eq||'').toLowerCase();
   if (e.startsWith('basis') && e.includes('infra')) return 'Basis + Infraestructura';
   if (e.startsWith('infra') && e.includes('basis')) return 'Infraestructura + Basis';
   if (e.startsWith('basis') && e.includes('cliente')) return 'Basis + Cliente';
@@ -324,13 +251,12 @@ function equipoLabel(eq) {
 }
 
 function equipoLider(eq) {
-  const e = (eq || '').toLowerCase().trim();
+  const e = (eq||'').toLowerCase();
   if (e.startsWith('basis')) return 'basis';
   if (e.startsWith('infra')) return 'infra';
   return e;
 }
 
-// ── CRUCE DETECTION ─────────────────────────────────────────────────────────
 function detectCruces(rows) {
   const cruces = new Set();
   for (let i = 0; i < rows.length; i++) {
@@ -338,107 +264,77 @@ function detectCruces(rows) {
       const a = rows[i], b = rows[j];
       if (!a._fecha || !b._fecha) continue;
       if (a._fecha.getTime() !== b._fecha.getTime()) continue;
-      if (equipoLider(a['Equipos involucrados']) === equipoLider(b['Equipos involucrados'])) {
-        cruces.add(a['Número']);
-        cruces.add(b['Número']);
+      if (equipoLider(a.equipo) === equipoLider(b.equipo)) {
+        cruces.add(a.numero); cruces.add(b.numero);
       }
     }
   }
   return cruces;
 }
 
-// ── RENDER ───────────────────────────────────────────────────────────────────
 function render(rows) {
-  // Parse fechas
-  rows.forEach(r => r._fecha = parseFecha(r['Fecha de inicio planificada']));
-
-  // Sort ascending
-  rows.sort((a,b) => {
-    if (!a._fecha) return 1;
-    if (!b._fecha) return -1;
-    return a._fecha - b._fecha;
-  });
-
+  rows.sort((a,b) => (!a._fecha?1:!b._fecha?-1:a._fecha-b._fecha));
   const cruces = detectCruces(rows);
 
-  // KPIs
-  const total = rows.length;
-  const pdt = rows.filter(r => (r['Plan de trabajo']||'').toLowerCase().includes('pdt')).length;
-  const plantilla = rows.filter(r => (r['Plan de trabajo']||'').toLowerCase().includes('plantilla')).length;
-  const nCruces = new Set([...cruces]).size / 2; // pairs
+  const total     = rows.length;
+  const pdt       = rows.filter(r => r.plan.toLowerCase().includes('pdt')).length;
+  const plantilla = rows.filter(r => r.plan.toLowerCase().includes('plantilla')).length;
+  const nCruces   = cruces.size / 2;
 
-  document.getElementById('kpi-total').textContent = total;
-  document.getElementById('kpi-pdt').textContent = pdt;
-  document.getElementById('kpi-pdt-pct').textContent = `${Math.round(pdt/total*100)}% del total`;
+  document.getElementById('kpi-total').textContent     = total;
+  document.getElementById('kpi-pdt').textContent       = pdt;
+  document.getElementById('kpi-pdt-pct').textContent   = total ? `${Math.round(pdt/total*100)}% del total` : '';
   document.getElementById('kpi-plantilla').textContent = plantilla;
-  document.getElementById('kpi-plantilla-pct').textContent = `${Math.round(plantilla/total*100)}% del total`;
-  document.getElementById('kpi-cruces').textContent = Math.round(nCruces);
+  document.getElementById('kpi-plantilla-pct').textContent = total ? `${Math.round(plantilla/total*100)}% del total` : '';
+  document.getElementById('kpi-cruces').textContent    = Math.round(nCruces);
   document.getElementById('kpi-cruces-sub').textContent = nCruces > 0 ? 'requiere atención' : 'sin cruces';
 
-  // Fechas de ventana
   const fechas = rows.filter(r=>r._fecha).map(r=>r._fecha);
-  const minF = fechas.reduce((a,b)=>a<b?a:b);
-  const maxF = fechas.reduce((a,b)=>a>b?a:b);
-  const fmtMin = `${minF.getDate().toString().padStart(2,'0')}/${(minF.getMonth()+1).toString().padStart(2,'0')}`;
-  const fmtMax = `${maxF.getDate().toString().padStart(2,'0')}/${(maxF.getMonth()+1).toString().padStart(2,'0')}`;
-  document.getElementById('titulo').textContent = `Cambios del ${fmtMin} Jun al ${fmtMax} Jun ${maxF.getFullYear()}`;
-  document.getElementById('ventana').textContent = `Ventana: ${DIAS[minF.getDay()]} ${fmtMin} 11:00 AM → ${DIAS[maxF.getDay()]} ${fmtMax} 23:59 PM`;
-
-  // Exportado / Reunión
-  const hoy = new Date();
-  const diasSem = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  document.getElementById('exportado').textContent = `Exportado: ${diasSem[hoy.getDay()]} ${hoy.getDate().toString().padStart(2,'0')}/${(hoy.getMonth()+1).toString().padStart(2,'0')}/${hoy.getFullYear()}`;
-  const reunion = new Date(minF);
-  document.getElementById('reunion').textContent = `Reunión: ${DIAS[reunion.getDay()]} ${fmtMin}/${reunion.getFullYear()}`;
-
-  // Alerta cruces
-  if (cruces.size > 0) {
-    const cruceNums = [...cruces].join(' y ');
-    // Get empresas for cruce rows
-    const cruceRows = rows.filter(r => cruces.has(r['Número']));
-    const empresas = [...new Set(cruceRows.map(r => r['Empresa']))].join(', ');
-    document.getElementById('alerta-cruce').classList.remove('hidden');
-    document.getElementById('alerta-texto').innerHTML = `<strong>Cruce detectado:</strong> ${cruceNums} &mdash; ${empresas}. Coordinar ejecución secuencial.`;
+  if (fechas.length) {
+    const minF = fechas.reduce((a,b)=>a<b?a:b);
+    const maxF = fechas.reduce((a,b)=>a>b?a:b);
+    const fmt = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    document.getElementById('titulo').textContent = `Cambios del ${fmt(minF)} Jun al ${fmt(maxF)} Jun ${maxF.getFullYear()}`;
+    document.getElementById('ventana').textContent = `Ventana: ${DIAS[minF.getDay()]} ${fmt(minF)} 11:00 AM → ${DIAS[maxF.getDay()]} ${fmt(maxF)} 23:59 PM`;
+    document.getElementById('reunion').textContent = `Reunión: ${DIAS[minF.getDay()]} ${fmt(minF)}/${minF.getFullYear()}`;
   }
 
-  // Table
+  const hoy = new Date();
+  const ds = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  document.getElementById('exportado').textContent = `Exportado: ${ds[hoy.getDay()]} ${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}/${hoy.getFullYear()}`;
+
+  if (cruces.size > 0) {
+    const cruceRows = rows.filter(r => cruces.has(r.numero));
+    const empresas = [...new Set(cruceRows.map(r=>r.empresa))].join(', ');
+    const nums = [...cruces].join(' y ');
+    document.getElementById('alerta-cruce').classList.remove('hidden');
+    document.getElementById('alerta-texto').innerHTML = `<strong>Cruce detectado:</strong> ${nums} &mdash; ${empresas}. Coordinar ejecución secuencial.`;
+  }
+
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
   let lastDay = '';
 
   rows.forEach(r => {
     const f = r._fecha;
-    const dayKey = f ? `${f.getFullYear()}-${f.getMonth()}-${f.getDate()}` : 'sin-fecha';
-    const dayLbl = f ? dayLabel(f) : 'Sin fecha';
-
+    const dayKey = f ? `${f.getFullYear()}-${f.getMonth()}-${f.getDate()}` : 'x';
     if (dayKey !== lastDay) {
       lastDay = dayKey;
       const tr = document.createElement('tr');
       tr.className = 'day-header';
-      tr.innerHTML = `<td colspan="7">${dayLbl}</td>`;
+      tr.innerHTML = `<td colspan="7">${f ? dayLabel(f) : 'Sin fecha'}</td>`;
       tbody.appendChild(tr);
     }
 
-    const esCruce = cruces.has(r['Número']);
-    const plan = (r['Plan de trabajo'] || '').trim();
-    const obs = (r['Observación'] || '').trim();
-    const eqRaw = r['Equipos involucrados'] || '';
-
-    // Badge plan
-    const planBadge = plan.toLowerCase().includes('pdt')
+    const esCruce = cruces.has(r.numero);
+    const obs = (r.observacion||'').toLowerCase().includes('pendiente');
+    const planBadge = r.plan.toLowerCase().includes('pdt')
       ? `<span class="badge badge-pdt">PDT</span>`
       : `<span class="badge badge-plantilla">Plantilla</span>`;
-
-    // Estado
-    let estadoBadge;
-    if (esCruce) {
-      estadoBadge = `<span class="badge badge-cruce">Cruce</span>`;
-    } else if (obs.toLowerCase().includes('pendiente')) {
-      estadoBadge = `<span class="badge badge-obs">⏳ PDT pendiente</span>`;
-    } else {
-      estadoBadge = `<span class="badge badge-ok">OK</span>`;
-    }
-
+    const estadoBadge = esCruce
+      ? `<span class="badge badge-cruce">Cruce</span>`
+      : obs ? `<span class="badge badge-obs">⏳ PDT pendiente</span>`
+             : `<span class="badge badge-ok">OK</span>`;
     const fechaHTML = esCruce
       ? `<span class="fecha-cruce">${formatFecha(f)} &#9651;</span>`
       : `<span class="fecha-text">${formatFecha(f)}</span>`;
@@ -446,14 +342,13 @@ function render(rows) {
     const tr = document.createElement('tr');
     if (esCruce) tr.className = 'cruce-row';
     tr.innerHTML = `
-      <td><span class="chg">${r['Número']||''}</span></td>
+      <td><span class="chg">${r.numero}</span></td>
       <td>${fechaHTML}</td>
-      <td><span class="empresa">${r['Empresa']||''}</span></td>
-      <td><span class="asunto-text">${r['Asunto']||''}</span></td>
+      <td><span class="empresa">${r.empresa}</span></td>
+      <td><span class="asunto-text">${r.asunto}</span></td>
       <td>${planBadge}</td>
-      <td><span class="eq ${equipoClass(eqRaw)}">${equipoLabel(eqRaw)}</span></td>
-      <td>${estadoBadge}</td>
-    `;
+      <td><span class="eq ${equipoClass(r.equipo)}">${equipoLabel(r.equipo)}</span></td>
+      <td>${estadoBadge}</td>`;
     tbody.appendChild(tr);
   });
 
@@ -461,14 +356,40 @@ function render(rows) {
   document.getElementById('tabla').style.display = 'table';
 }
 
-// ── FETCH ────────────────────────────────────────────────────────────────────
-fetch(CSV_URL)
-  .then(r => { if (!r.ok) throw new Error('fetch failed'); return r.text(); })
-  .then(text => render(parseCSV(text)))
-  .catch(() => {
+fetch(JSON_URL)
+  .then(r => r.text())
+  .then(text => {
+    // gviz returns /*O_o*/\ngoogle.visualization.Query.setResponse({...});
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/)[1]);
+    const cols = json.table.cols.map(c => c.label);
+    const rows = json.table.rows
+      .filter(r => r && r.c && r.c[0] && r.c[0].v)
+      .map(r => {
+        const get = i => (r.c[i] && r.c[i].v != null) ? r.c[i].v : '';
+        // cols: Número, Fecha de inicio planificada, Empresa, Asunto, Plan de trabajo, Equipos involucrados, Observación
+        return {
+          numero:      String(get(0)).trim(),
+          _fecha:      parseFechaGviz(get(1)),
+          empresa:     String(get(2)).trim(),
+          asunto:      String(get(3)).trim(),
+          plan:        String(get(4)).trim(),
+          equipo:      String(get(5)).trim(),
+          observacion: String(get(6)).trim(),
+        };
+      });
+    render(rows);
+  })
+  .catch(err => {
+    console.error(err);
     document.getElementById('loading').style.display = 'none';
     document.getElementById('error-msg').style.display = 'block';
     document.getElementById('tabla').style.display = 'table';
+    document.getElementById('kpi-total').textContent = '0';
+    document.getElementById('kpi-pdt').textContent = '0';
+    document.getElementById('kpi-plantilla').textContent = '0';
+    document.getElementById('kpi-cruces').textContent = '0';
+    document.getElementById('kpi-cruces-sub').textContent = 'sin cruces';
+    document.getElementById('titulo').textContent = 'Dashboard de Cambios - Seidor';
   });
 </script>
 </body>
