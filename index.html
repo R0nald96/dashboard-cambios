@@ -106,7 +106,41 @@
   .eq-basis-cliente { background: #fbeaf0; color: #72243e; }
   .legend { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: 11px; color: #888; }
   .legend-item { display: flex; align-items: center; gap: 5px; }
-  .filtro-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .vista-btn {
+    font-size: 11px; font-weight: 600; padding: 5px 14px;
+    border-radius: 6px; border: 1px solid #e0e0e0;
+    background: #fff; color: #666; cursor: pointer;
+  }
+  .vista-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .tl-dia-bloque { margin-bottom: 20px; }
+  .tl-dia-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: #888;
+    padding: 5px 10px; background: #e9e9e7;
+    border-radius: 5px; display: inline-block; margin-bottom: 8px;
+  }
+  .tl-brecha {
+    display: flex; align-items: center; gap: 8px;
+    background: #f0fdf4; border: 1px dashed #86efac;
+    border-radius: 6px; padding: 6px 12px;
+    font-size: 11px; color: #166534;
+    margin: 4px 0 4px 130px;
+  }
+  .tl-fila { display: flex; align-items: center; margin-bottom: 5px; }
+  .tl-hora { width: 130px; flex-shrink: 0; font-size: 10px; color: #aaa; text-align: right; padding-right: 12px; line-height: 1.7; }
+  .tl-hora .h-ini { color: #555; font-size: 11px; display: block; }
+  .tl-hora .h-fin { color: #bbb; font-size: 10px; display: block; }
+  .tl-card {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid #e8e8e8;
+    border-radius: 8px; padding: 8px 12px;
+  }
+  .tl-card.cruce { border-color: #fca5a5; background: #fff8f8; }
+  .tl-card.pend  { border-color: #fcd34d; }
+  .tl-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .tl-chg { font-size: 10px; font-family: monospace; color: #bbb; flex-shrink: 0; width: 90px; }
+  .tl-emp { font-weight: 600; font-size: 12px; color: #111; flex-shrink: 0; width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tl-asun { font-size: 11px; color: #666; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .filtro-label { font-size: 11px; color: #888; font-weight: 500; }
   .filtro-select {
     font-size: 12px; color: #333; background: #fff;
@@ -179,8 +213,16 @@
       <option value="">Todos los clientes</option>
     </select>
     <span class="filtro-count" id="filtro-count"></span>
+    <div style="margin-left:auto; display:flex; gap:6px;">
+      <button class="vista-btn active" id="btn-tabla" onclick="cambiarVista('tabla')">&#9776; Tabla</button>
+      <button class="vista-btn" id="btn-timeline" onclick="cambiarVista('timeline')">&#9656; Timeline</button>
+    </div>
   </div>
-  <p class="section-title">Listado completo de cambios</p>
+
+  <p class="section-title" id="section-label">Listado completo de cambios</p>
+
+  <!-- VISTA TABLA -->
+  <div id="vista-tabla">
   <div class="table-wrap">
     <div class="loading" id="loading">Cargando datos desde Google Sheets...</div>
     <table id="tabla" style="display:none;">
@@ -206,6 +248,13 @@
       </thead>
       <tbody id="tbody"></tbody>
     </table>
+  </div>
+  </div>
+
+  <!-- VISTA TIMELINE -->
+  <div id="vista-timeline" style="display:none;">
+    <p style="font-size:11px; color:#888; margin-bottom:16px;">Brechas verdes = ventana libre entre fin de un cambio e inicio del siguiente</p>
+    <div id="tl-container"></div>
   </div>
 
   <div class="legend">
@@ -409,11 +458,104 @@ function renderTabla(rows) {
 
 let allRows = [];
 
+let vistaActual = 'tabla';
+
+function cambiarVista(v) {
+  vistaActual = v;
+  document.getElementById('vista-tabla').style.display    = v === 'tabla'    ? 'block' : 'none';
+  document.getElementById('vista-timeline').style.display = v === 'timeline' ? 'block' : 'none';
+  document.getElementById('btn-tabla').classList.toggle('active',    v === 'tabla');
+  document.getElementById('btn-timeline').classList.toggle('active', v === 'timeline');
+  document.getElementById('section-label').textContent = v === 'tabla' ? 'Listado completo de cambios' : 'Línea de tiempo de cambios';
+  if (v === 'timeline') {
+    const val = document.getElementById('filtro-empresa').value;
+    const rows = val ? allRows.filter(r => r.empresa === val) : allRows;
+    renderTimeline(rows);
+  }
+}
+
+function renderTimeline(rows) {
+  const cruces = detectCruces(allRows);
+  const sorted = [...rows].sort((a,b) => a._fecha - b._fecha);
+  const container = document.getElementById('tl-container');
+  container.innerHTML = '';
+
+  const p2 = n => String(n).padStart(2,'0');
+  const fmtH = d => d ? `${p2(d.getHours())}:${p2(d.getMinutes())}` : '--';
+  const diffH = (a,b) => Math.round((b-a)/360000)/10;
+
+  const days = {};
+  sorted.forEach(c => {
+    const f = c._fecha;
+    const k = f ? `${f.getFullYear()}-${f.getMonth()}-${f.getDate()}` : 'x';
+    if (!days[k]) days[k] = { lbl: f ? dayLabel(f) : 'Sin fecha', items: [] };
+    days[k].items.push(c);
+  });
+
+  Object.keys(days).forEach(dk => {
+    const day = days[dk];
+    const bloque = document.createElement('div');
+    bloque.className = 'tl-dia-bloque';
+    bloque.innerHTML = `<div class="tl-dia-label">${day.lbl}</div>`;
+
+    day.items.forEach(c => {
+      const idx = sorted.indexOf(c);
+      if (idx > 0) {
+        const prev = sorted[idx-1];
+        if (prev._fechafin && c._fecha) {
+          const h = diffH(prev._fechafin, c._fecha);
+          if (h >= 4) {
+            const br = document.createElement('div');
+            br.className = 'tl-brecha';
+            br.innerHTML = `🟢 <strong>Brecha de ${h}h</strong> &nbsp;·&nbsp; Fin anterior: ${fmtH(prev._fechafin)} → Inicio: ${fmtH(c._fecha)} — disponible para nuevos cambios`;
+            bloque.appendChild(br);
+          }
+        }
+      }
+
+      const esCruce = cruces.has(c.numero);
+      const obs = (c.observacion||'').toLowerCase().includes('pendiente');
+      const eq = equipoClass(c.equipo);
+      const dotColor = eq.includes('infra') && !eq.includes('basis') ? '#3b82f6' : eq.includes('cliente') ? '#ec4899' : '#7c6fe0';
+      const planB = c.plan.toLowerCase().includes('pdt')
+        ? `<span class="badge badge-pdt">PDT</span>`
+        : `<span class="badge badge-plantilla">Plantilla</span>`;
+      const estB = esCruce
+        ? `<span class="badge badge-cruce">⚠ Cruce</span>`
+        : obs ? `<span class="badge badge-obs">⏳ PDT pend.</span>`
+              : `<span class="badge badge-ok">OK</span>`;
+
+      const fila = document.createElement('div');
+      fila.className = 'tl-fila';
+      fila.innerHTML = `
+        <div class="tl-hora">
+          <span class="h-ini">${fmtH(c._fecha)}</span>
+          <span class="h-fin">${fmtH(c._fechafin)}</span>
+        </div>
+        <div class="tl-card${esCruce?' cruce':''}${obs?' pend':''}">
+          <span class="tl-dot" style="background:${dotColor}"></span>
+          <span class="tl-chg">${c.numero}</span>
+          <span class="tl-emp" title="${c.empresa}">${c.empresa}</span>
+          <span class="tl-asun" title="${c.asunto}">${c.asunto}</span>
+          <span class="eq ${eq}">${equipoLabel(c.equipo)}</span>
+          ${planB} ${estB}
+        </div>`;
+      bloque.appendChild(fila);
+    });
+
+    container.appendChild(bloque);
+  });
+}
+
 function filtrarEmpresa() {
   const val = document.getElementById('filtro-empresa').value;
   const filtered = val ? allRows.filter(r => r.empresa === val) : allRows;
   document.getElementById('filtro-count').textContent = val ? `${filtered.length} cambio${filtered.length !== 1 ? 's' : ''}` : '';
-  renderTabla(filtered);
+  if (vistaActual === 'tabla') {
+    renderTabla(filtered);
+  } else {
+    renderTimeline(filtered);
+  }
 }
 
 function poblarFiltro(rows) {
