@@ -336,44 +336,75 @@ function renderTabla(rows) {
   const cruces = detectCruces(allRows);
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
-  let lastDay = '';
 
-  rows.forEach(r => {
-    const f = r._fecha;
-    const dayKey = f ? `${f.getFullYear()}-${f.getMonth()}-${f.getDate()}` : 'x';
-    if (dayKey !== lastDay) {
-      lastDay = dayKey;
+  const filtro = document.getElementById('filtro-empresa').value;
+
+  if (filtro) {
+    // Filtrado por empresa: sin separadores de día, solo lista de cambios
+    rows.forEach(r => {
+      const f = r._fecha;
+      const esCruce = cruces.has(r.numero);
+      const obs = (r.observacion||'').toLowerCase().includes('pendiente');
+      const planBadge = r.plan.toLowerCase().includes('pdt')
+        ? `<span class="badge badge-pdt">PDT</span>`
+        : `<span class="badge badge-plantilla">Plantilla</span>`;
+      const estadoBadge = esCruce
+        ? `<span class="badge badge-cruce">Cruce</span>`
+        : obs ? `<span class="badge badge-obs">⏳ PDT pendiente</span>`
+               : `<span class="badge badge-ok">OK</span>`;
+      const fechaHTML = esCruce
+        ? `<span class="fecha-cruce">${formatFecha(f)} &#9651;</span>`
+        : `<span class="fecha-text">${formatFecha(f)}</span>`;
       const tr = document.createElement('tr');
-      tr.className = 'day-header';
-      tr.innerHTML = `<td colspan="7">${f ? dayLabel(f) : 'Sin fecha'}</td>`;
+      if (esCruce) tr.className = 'cruce-row';
+      tr.innerHTML = `
+        <td><span class="chg">${r.numero}</span></td>
+        <td>${fechaHTML}</td>
+        <td><span class="empresa">${r.empresa}</span></td>
+        <td><span class="asunto-text">${r.asunto}</span></td>
+        <td>${planBadge}</td>
+        <td><span class="eq ${equipoClass(r.equipo)}">${equipoLabel(r.equipo)}</span></td>
+        <td>${estadoBadge}</td>`;
       tbody.appendChild(tr);
-    }
-
-    const esCruce = cruces.has(r.numero);
-    const obs = (r.observacion||'').toLowerCase().includes('pendiente');
-    const planBadge = r.plan.toLowerCase().includes('pdt')
-      ? `<span class="badge badge-pdt">PDT</span>`
-      : `<span class="badge badge-plantilla">Plantilla</span>`;
-    const estadoBadge = esCruce
-      ? `<span class="badge badge-cruce">Cruce</span>`
-      : obs ? `<span class="badge badge-obs">⏳ PDT pendiente</span>`
-             : `<span class="badge badge-ok">OK</span>`;
-    const fechaHTML = esCruce
-      ? `<span class="fecha-cruce">${formatFecha(f)} &#9651;</span>`
-      : `<span class="fecha-text">${formatFecha(f)}</span>`;
-
-    const tr = document.createElement('tr');
-    if (esCruce) tr.className = 'cruce-row';
-    tr.innerHTML = `
-      <td><span class="chg">${r.numero}</span></td>
-      <td>${fechaHTML}</td>
-      <td><span class="empresa">${r.empresa}</span></td>
-      <td><span class="asunto-text">${r.asunto}</span></td>
-      <td>${planBadge}</td>
-      <td><span class="eq ${equipoClass(r.equipo)}">${equipoLabel(r.equipo)}</span></td>
-      <td>${estadoBadge}</td>`;
-    tbody.appendChild(tr);
-  });
+    });
+  } else {
+    // Sin filtro: agrupado por día
+    let lastDay = '';
+    rows.forEach(r => {
+      const f = r._fecha;
+      const dayKey = f ? `${f.getFullYear()}-${f.getMonth()}-${f.getDate()}` : 'x';
+      if (dayKey !== lastDay) {
+        lastDay = dayKey;
+        const tr = document.createElement('tr');
+        tr.className = 'day-header';
+        tr.innerHTML = `<td colspan="7">${f ? dayLabel(f) : 'Sin fecha'}</td>`;
+        tbody.appendChild(tr);
+      }
+      const esCruce = cruces.has(r.numero);
+      const obs = (r.observacion||'').toLowerCase().includes('pendiente');
+      const planBadge = r.plan.toLowerCase().includes('pdt')
+        ? `<span class="badge badge-pdt">PDT</span>`
+        : `<span class="badge badge-plantilla">Plantilla</span>`;
+      const estadoBadge = esCruce
+        ? `<span class="badge badge-cruce">Cruce</span>`
+        : obs ? `<span class="badge badge-obs">⏳ PDT pendiente</span>`
+               : `<span class="badge badge-ok">OK</span>`;
+      const fechaHTML = esCruce
+        ? `<span class="fecha-cruce">${formatFecha(f)} &#9651;</span>`
+        : `<span class="fecha-text">${formatFecha(f)}</span>`;
+      const tr = document.createElement('tr');
+      if (esCruce) tr.className = 'cruce-row';
+      tr.innerHTML = `
+        <td><span class="chg">${r.numero}</span></td>
+        <td>${fechaHTML}</td>
+        <td><span class="empresa">${r.empresa}</span></td>
+        <td><span class="asunto-text">${r.asunto}</span></td>
+        <td>${planBadge}</td>
+        <td><span class="eq ${equipoClass(r.equipo)}">${equipoLabel(r.equipo)}</span></td>
+        <td>${estadoBadge}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
 }
 
 let allRows = [];
@@ -406,11 +437,12 @@ fetch(JSON_URL)
         return {
           numero:      String(get(0)).trim(),
           _fecha:      parseFechaGviz(get(1)),
-          empresa:     String(get(2)).trim(),
-          asunto:      String(get(3)).trim(),
-          plan:        String(get(4)).trim(),
-          equipo:      String(get(5)).trim(),
-          observacion: String(get(6)).trim(),
+          _fechafin:   parseFechaGviz(get(2)),
+          empresa:     String(get(3)).trim(),
+          asunto:      String(get(4)).trim(),
+          plan:        String(get(5)).trim(),
+          equipo:      String(get(6)).trim(),
+          observacion: String(get(7)).trim(),
         };
       });
     allRows = rows;
