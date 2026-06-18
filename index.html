@@ -401,10 +401,12 @@ function renderTabla(rows) {
     rows.forEach(r => {
       const f = r._fecha;
       const esCruce = cruces.has(r.numero);
-      const obs = (r.observacion||'').toLowerCase().includes('pendiente');
+      const obs = (r.observacion||'').trim().toLowerCase().includes('pendiente');
       const planBadge = r.plan.toLowerCase().includes('pdt')
         ? `<span class="badge badge-pdt">PDT</span>`
-        : `<span class="badge badge-plantilla">Plantilla</span>`;
+        : r.plan.toLowerCase().includes('plantilla')
+        ? `<span class="badge badge-plantilla">Plantilla</span>`
+        : `<span style="color:#ccc;">—</span>`;
       const estadoBadge = esCruce
         ? `<span class="badge badge-cruce">Cruce</span>`
         : obs ? `<span class="badge badge-obs">⏳ PDT pendiente</span>`
@@ -438,10 +440,12 @@ function renderTabla(rows) {
         tbody.appendChild(tr);
       }
       const esCruce = cruces.has(r.numero);
-      const obs = (r.observacion||'').toLowerCase().includes('pendiente');
+      const obs = (r.observacion||'').trim().toLowerCase().includes('pendiente');
       const planBadge = r.plan.toLowerCase().includes('pdt')
         ? `<span class="badge badge-pdt">PDT</span>`
-        : `<span class="badge badge-plantilla">Plantilla</span>`;
+        : r.plan.toLowerCase().includes('plantilla')
+        ? `<span class="badge badge-plantilla">Plantilla</span>`
+        : `<span style="color:#ccc;">—</span>`;
       const estadoBadge = esCruce
         ? `<span class="badge badge-cruce">Cruce</span>`
         : obs ? `<span class="badge badge-obs">⏳ PDT pendiente</span>`
