@@ -98,6 +98,9 @@
   .badge-cruce     { background: #fcebeb; color: #791f1f; }
   .badge-ok        { background: #e1f5ee; color: #085041; }
   .badge-obs       { background: #fff3e0; color: #854f0b; }
+  .badge-obs-pdt   { background: #faeeda; color: #633806; }
+  .badge-obs-cli   { background: #e6f1fb; color: #0c447c; }
+  .badge-obs-sei   { background: #eeedfe; color: #3c3489; }
   .eq { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
   .eq-basis-infra   { background: #eeedfe; color: #3c3489; }
   .eq-infra-basis   { background: #e6f1fb; color: #0c447c; }
@@ -345,6 +348,15 @@ function detectCruces(rows) {
   return cruces;
 }
 
+
+function obsBadge(obs) {
+  const o = (obs||'').trim().toLowerCase();
+  if (!o) return `<span class="badge badge-ok">OK</span>`;
+  if (o.includes('pdt')) return `<span class="badge badge-obs-pdt">📄 PDT pendiente</span>`;
+  if (o.includes('cliente')) return `<span class="badge badge-obs-cli">👤 Pend. Cliente</span>`;
+  if (o.includes('seidor'))  return `<span class="badge badge-obs-sei">🏢 Pend. Seidor</span>`;
+  return `<span class="badge badge-obs" title="${obs}">⚠ ${obs.length > 20 ? obs.substring(0,20)+'…' : obs}</span>`;
+}
 function render(rows) {
   rows.sort((a,b) => (!a._fecha?1:!b._fecha?-1:a._fecha-b._fecha));
   const cruces = detectCruces(rows);
@@ -407,10 +419,7 @@ function renderTabla(rows) {
         : r.plan.toLowerCase().includes('plantilla')
         ? `<span class="badge badge-plantilla">Plantilla</span>`
         : `<span style="color:#ccc;">—</span>`;
-      const estadoBadge = esCruce
-        ? `<span class="badge badge-cruce">Cruce</span>`
-        : obsTexto ? `<span class="badge badge-obs" title="${obsTexto}">⚠ ${obsTexto.length > 22 ? obsTexto.substring(0,22)+'…' : obsTexto}</span>`
-               : `<span class="badge badge-ok">OK</span>`;
+      const estadoBadge = esCruce ? `<span class="badge badge-cruce">Cruce</span>` : obsBadge(r.observacion);
       const fechaHTML = esCruce
         ? `<span class="fecha-cruce">${formatFecha(f)} &#9651;</span>`
         : `<span class="fecha-text">${formatFecha(f)}</span>`;
@@ -446,10 +455,7 @@ function renderTabla(rows) {
         : r.plan.toLowerCase().includes('plantilla')
         ? `<span class="badge badge-plantilla">Plantilla</span>`
         : `<span style="color:#ccc;">—</span>`;
-      const estadoBadge = esCruce
-        ? `<span class="badge badge-cruce">Cruce</span>`
-        : obsTexto ? `<span class="badge badge-obs" title="${obsTexto}">⚠ ${obsTexto.length > 22 ? obsTexto.substring(0,22)+'…' : obsTexto}</span>`
-               : `<span class="badge badge-ok">OK</span>`;
+      const estadoBadge = esCruce ? `<span class="badge badge-cruce">Cruce</span>` : obsBadge(r.observacion);
       const fechaHTML = esCruce
         ? `<span class="fecha-cruce">${formatFecha(f)} &#9651;</span>`
         : `<span class="fecha-text">${formatFecha(f)}</span>`;
@@ -532,10 +538,7 @@ function renderTimeline(rows) {
       const planB = c.plan.toLowerCase().includes('pdt')
         ? `<span class="badge badge-pdt">PDT</span>`
         : `<span class="badge badge-plantilla">Plantilla</span>`;
-      const estB = esCruce
-        ? `<span class="badge badge-cruce">⚠ Cruce</span>`
-        : obsTexto ? `<span class="badge badge-obs" title="${obsTexto}">⚠ ${obsTexto.length > 15 ? obsTexto.substring(0,15)+'…' : obsTexto}</span>`
-              : `<span class="badge badge-ok">OK</span>`;
+      const estB = esCruce ? `<span class="badge badge-cruce">⚠ Cruce</span>` : obsBadge(c.observacion);
 
       const fila = document.createElement('div');
       fila.className = 'tl-fila';
