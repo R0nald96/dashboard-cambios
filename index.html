@@ -547,7 +547,7 @@ function renderTimeline(rows) {
           <span class="h-ini">${fmtH(c._fecha)}</span>
           <span class="h-fin">${fmtH(c._fechafin)}</span>
         </div>
-        <div class="tl-card${esCruce?' cruce':''}${obs?' pend':''}">
+        <div class="tl-card${esCruce?' cruce':''}${obsTexto?' pend':''}">
           <span class="tl-dot" style="background:${dotColor}"></span>
           <span class="tl-chg">${c.numero}</span>
           <span class="tl-emp" title="${c.empresa}">${c.empresa}</span>
