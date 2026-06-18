@@ -270,7 +270,7 @@
     <span class="legend-item"><span class="badge badge-pdt">PDT</span> Plan de trabajo adjunto (Excel)</span>
     <span class="legend-item"><span class="badge badge-plantilla">Plantilla</span> Plantilla automática ServiceNow</span>
     <span class="legend-item"><span class="badge badge-cruce">Cruce</span> Mismo horario, mismo equipo líder</span>
-    <span class="legend-item"><span class="badge badge-obs">⏳ PDT pendiente</span> Observación activa en ServiceNow</span>
+    <span class="legend-item"><span class="badge badge-obs">⚠ Observación</span> Texto libre de observación en ServiceNow</span>
   </div>
 
 </div>
@@ -401,7 +401,7 @@ function renderTabla(rows) {
     rows.forEach(r => {
       const f = r._fecha;
       const esCruce = cruces.has(r.numero);
-      const obs = (r.observacion||'').trim().toLowerCase().includes('pendiente');
+      const obsTexto = (r.observacion||'').trim();
       const planBadge = r.plan.toLowerCase().includes('pdt')
         ? `<span class="badge badge-pdt">PDT</span>`
         : r.plan.toLowerCase().includes('plantilla')
@@ -409,7 +409,7 @@ function renderTabla(rows) {
         : `<span style="color:#ccc;">—</span>`;
       const estadoBadge = esCruce
         ? `<span class="badge badge-cruce">Cruce</span>`
-        : obs ? `<span class="badge badge-obs">⏳ PDT pendiente</span>`
+        : obsTexto ? `<span class="badge badge-obs" title="${obsTexto}">⚠ ${obsTexto.length > 22 ? obsTexto.substring(0,22)+'…' : obsTexto}</span>`
                : `<span class="badge badge-ok">OK</span>`;
       const fechaHTML = esCruce
         ? `<span class="fecha-cruce">${formatFecha(f)} &#9651;</span>`
@@ -440,7 +440,7 @@ function renderTabla(rows) {
         tbody.appendChild(tr);
       }
       const esCruce = cruces.has(r.numero);
-      const obs = (r.observacion||'').trim().toLowerCase().includes('pendiente');
+      const obsTexto = (r.observacion||'').trim();
       const planBadge = r.plan.toLowerCase().includes('pdt')
         ? `<span class="badge badge-pdt">PDT</span>`
         : r.plan.toLowerCase().includes('plantilla')
@@ -448,7 +448,7 @@ function renderTabla(rows) {
         : `<span style="color:#ccc;">—</span>`;
       const estadoBadge = esCruce
         ? `<span class="badge badge-cruce">Cruce</span>`
-        : obs ? `<span class="badge badge-obs">⏳ PDT pendiente</span>`
+        : obsTexto ? `<span class="badge badge-obs" title="${obsTexto}">⚠ ${obsTexto.length > 22 ? obsTexto.substring(0,22)+'…' : obsTexto}</span>`
                : `<span class="badge badge-ok">OK</span>`;
       const fechaHTML = esCruce
         ? `<span class="fecha-cruce">${formatFecha(f)} &#9651;</span>`
@@ -526,7 +526,7 @@ function renderTimeline(rows) {
       }
 
       const esCruce = cruces.has(c.numero);
-      const obs = (c.observacion||'').toLowerCase().includes('pendiente');
+      const obsTexto = (c.observacion||'').trim();
       const eq = equipoClass(c.equipo);
       const dotColor = eq.includes('infra') && !eq.includes('basis') ? '#3b82f6' : eq.includes('cliente') ? '#ec4899' : '#7c6fe0';
       const planB = c.plan.toLowerCase().includes('pdt')
@@ -534,7 +534,7 @@ function renderTimeline(rows) {
         : `<span class="badge badge-plantilla">Plantilla</span>`;
       const estB = esCruce
         ? `<span class="badge badge-cruce">⚠ Cruce</span>`
-        : obs ? `<span class="badge badge-obs">⏳ PDT pend.</span>`
+        : obsTexto ? `<span class="badge badge-obs" title="${obsTexto}">⚠ ${obsTexto.length > 15 ? obsTexto.substring(0,15)+'…' : obsTexto}</span>`
               : `<span class="badge badge-ok">OK</span>`;
 
       const fila = document.createElement('div');
