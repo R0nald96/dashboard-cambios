@@ -86,8 +86,8 @@
   .cal-hora-cell { height: 60px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: flex-start; justify-content: flex-end; padding: 3px 6px 0 0; font-size: 10px; color: #b0b8cc; font-variant-numeric: tabular-nums; }
   .cal-grid { flex: 1; overflow-x: auto; }
   .cal-dias-header { display: flex; border-bottom: 1px solid #d8dce6; position: sticky; top: 0; background: #f0f2f7; z-index: 10; }
-  .cal-dia-header { flex: 1; min-width: 110px; padding: 8px 10px; border-right: 1px solid #e8ebf2; }
-  .cal-dia-num { font-size: 18px; font-weight: 700; color: #3b4a6b; line-height: 1; }
+  .cal-dia-header { flex: 1; min-width: 170px; padding: 10px 14px; border-right: 1px solid #e8ebf2; }
+  .cal-dia-num { font-size: 20px; font-weight: 700; color: #3b4a6b; line-height: 1; }
   .cal-dia-num.hoy { background: #3b4a6b; color: #fff; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
   .cal-dia-nombre { font-size: 10px; color: #9aa0b0; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
   .cal-body { display: flex; position: relative; }
@@ -230,16 +230,16 @@
 
   <!-- VISTA CALENDARIO -->
   <div id="vista-calendario" style="display:none;">
-    <div style="height:600px; overflow-y:auto; border:1px solid #d8dce6; border-radius:10px; background:#f8f9fc;" id="cal-scroll">
-      <div style="display:flex;">
+    <div style="height:640px; overflow-y:auto; overflow-x:auto; border:1px solid #d8dce6; border-radius:10px; background:#f8f9fc;" id="cal-scroll">
+      <div style="display:flex; min-width:1500px;">
         <!-- Columna de horas fija -->
-        <div style="width:52px; flex-shrink:0; border-right:1px solid #e8ebf2; background:#f0f2f7; position:sticky; left:0; z-index:9;">
-          <div style="height:48px; border-bottom:1px solid #e8ebf2;"></div>
+        <div style="width:60px; flex-shrink:0; border-right:1px solid #e8ebf2; background:#f0f2f7; position:sticky; left:0; z-index:9;">
+          <div style="height:52px; border-bottom:1px solid #e8ebf2;"></div>
           <div id="cal-horas-col"></div>
         </div>
         <!-- Grid de días -->
         <div style="flex:1; min-width:0;">
-          <div class="cal-dias-header" id="cal-dias-header"></div>
+          <div class="cal-dias-header" id="cal-dias-header" style="position:sticky; top:0; z-index:8;"></div>
           <div class="cal-body" id="cal-body"></div>
         </div>
       </div>
@@ -542,8 +542,8 @@ function renderCalendario(rows) {
     const th = document.createElement('div');
     th.className = 'cal-dia-header';
     th.style.flex = '1';
-    th.style.minWidth = '110px';
-    th.style.padding = '8px 10px';
+    th.style.minWidth = '170px';
+    th.style.padding = '10px 14px';
     th.style.borderRight = '1px solid #e8ebf2';
 
     const esHoy = d.toDateString() === hoy.toDateString();
@@ -568,7 +568,7 @@ function renderCalendario(rows) {
 
   dias.forEach((dia, di) => {
     const col = document.createElement('div');
-    col.style.cssText = `flex:1; min-width:110px; border-right:1px solid #e8ebf2; position:relative; height:${TOTAL_H}px;`;
+    col.style.cssText = `flex:1; min-width:170px; border-right:1px solid #e8ebf2; position:relative; height:${TOTAL_H}px;`;
 
     // Líneas de hora
     for (let h = 0; h < 24; h++) {
