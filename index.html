@@ -78,6 +78,49 @@
   .tl-emp { font-weight: 600; font-size: 12px; color: #1e2128; flex-shrink: 0; width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tl-asun { font-size: 11px; color: #6b7280; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   @media (max-width: 700px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .header { flex-direction: column; gap: 8px; } .header-meta { text-align: left; } }
+
+  /* ── CALENDARIO ── */
+  .cal-wrap { display: flex; border: 1px solid #d8dce6; border-radius: 10px; overflow: hidden; background: #f8f9fc; }
+  .cal-horas { width: 52px; flex-shrink: 0; border-right: 1px solid #e8ebf2; background: #f0f2f7; }
+  .cal-horas-header { height: 48px; border-bottom: 1px solid #e8ebf2; }
+  .cal-hora-cell { height: 60px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: flex-start; justify-content: flex-end; padding: 3px 6px 0 0; font-size: 10px; color: #b0b8cc; font-variant-numeric: tabular-nums; }
+  .cal-grid { flex: 1; overflow-x: auto; }
+  .cal-dias-header { display: flex; border-bottom: 1px solid #d8dce6; position: sticky; top: 0; background: #f0f2f7; z-index: 10; }
+  .cal-dia-header { flex: 1; min-width: 110px; padding: 8px 10px; border-right: 1px solid #e8ebf2; }
+  .cal-dia-num { font-size: 18px; font-weight: 700; color: #3b4a6b; line-height: 1; }
+  .cal-dia-num.hoy { background: #3b4a6b; color: #fff; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .cal-dia-nombre { font-size: 10px; color: #9aa0b0; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+  .cal-body { display: flex; position: relative; }
+  .cal-col { flex: 1; min-width: 110px; border-right: 1px solid #e8ebf2; position: relative; }
+  .cal-col-hora { height: 60px; border-bottom: 1px solid #f0f2f7; }
+  .cal-evento {
+    position: absolute; left: 3px; right: 3px;
+    border-radius: 5px; padding: 4px 6px;
+    font-size: 10px; line-height: 1.3;
+    overflow: hidden; cursor: pointer;
+    transition: opacity 0.15s; z-index: 2;
+    border-left: 3px solid rgba(0,0,0,0.2);
+  }
+  .cal-evento:hover { opacity: 0.85; filter: brightness(1.05); }
+  .cal-evento.ev-basis      { background: #eeedfe; color: #3c3489; border-left-color: #7c6fe0; }
+  .cal-evento.ev-infra      { background: #e6f1fb; color: #0c447c; border-left-color: #3b82f6; }
+  .cal-evento.ev-cruce      { background: #fcebeb; color: #791f1f; border-left-color: #ef4444; }
+  .cal-evento.ev-basis-cli  { background: #fbeaf0; color: #72243e; border-left-color: #ec4899; }
+  .cal-evento-chg  { font-size: 9px; opacity: 0.7; font-family: monospace; }
+  .cal-evento-emp  { font-weight: 700; font-size: 10px; }
+  .cal-evento-hora { font-size: 9px; opacity: 0.8; margin-top: 2px; }
+
+  /* Modal detalle */
+  .cal-modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:100; align-items:center; justify-content:center; }
+  .cal-modal-bg.open { display:flex; }
+  .cal-modal { background:#fff; border-radius:12px; padding:24px; max-width:480px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.15); }
+  .cal-modal-close { float:right; background:none; border:none; font-size:18px; cursor:pointer; color:#9aa0b0; }
+  .cal-modal h3 { font-size:14px; font-weight:700; color:#1e2128; margin-bottom:16px; }
+  .cal-modal-row { display:flex; gap:8px; margin-bottom:8px; font-size:12px; }
+  .cal-modal-label { color:#9aa0b0; font-weight:500; min-width:80px; flex-shrink:0; }
+  .cal-modal-val { color:#2c2f36; }
+  .cal-linea-hora { position:absolute; left:0; right:0; height:2px; background:#ef4444; z-index:5; pointer-events:none; }
+  .cal-linea-hora::before { content:''; position:absolute; left:-5px; top:-4px; width:10px; height:10px; background:#ef4444; border-radius:50%; }
 </style>
 </head>
 <body>
@@ -143,6 +186,7 @@
     <div style="display:flex; gap:6px; flex-shrink:0;">
       <button class="vista-btn active" id="btn-tabla" onclick="cambiarVista('tabla')">&#9776; Tabla</button>
       <button class="vista-btn" id="btn-timeline" onclick="cambiarVista('timeline')">&#9656; Timeline</button>
+      <button class="vista-btn" id="btn-calendario" onclick="cambiarVista('calendario')">&#128197; Calendario</button>
     </div>
   </div>
 
@@ -182,6 +226,46 @@
   <div id="vista-timeline" style="display:none;">
     <p style="font-size:11px; color:#555; margin-bottom:16px;">Brechas verdes = ventana libre entre fin de un cambio e inicio del siguiente</p>
     <div id="tl-container"></div>
+  </div>
+
+  <!-- VISTA CALENDARIO -->
+  <div id="vista-calendario" style="display:none;">
+    <div style="height:600px; overflow-y:auto; border:1px solid #d8dce6; border-radius:10px; background:#f8f9fc;" id="cal-scroll">
+      <div style="display:flex;">
+        <!-- Columna de horas fija -->
+        <div style="width:52px; flex-shrink:0; border-right:1px solid #e8ebf2; background:#f0f2f7; position:sticky; left:0; z-index:9;">
+          <div style="height:48px; border-bottom:1px solid #e8ebf2;"></div>
+          <div id="cal-horas-col"></div>
+        </div>
+        <!-- Grid de días -->
+        <div style="flex:1; min-width:0;">
+          <div class="cal-dias-header" id="cal-dias-header"></div>
+          <div class="cal-body" id="cal-body"></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap; font-size:11px; color:#6b7280;">
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:#eeedfe;border-left:3px solid #7c6fe0;display:inline-block;"></span>Basis lidera</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:#e6f1fb;border-left:3px solid #3b82f6;display:inline-block;"></span>Infraestructura lidera</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:#fbeaf0;border-left:3px solid #ec4899;display:inline-block;"></span>Basis + Cliente</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:3px;background:#fcebeb;border-left:3px solid #ef4444;display:inline-block;"></span>Cruce de horario</span>
+    </div>
+  </div>
+
+  <!-- Modal detalle evento -->
+  <div class="cal-modal-bg" id="cal-modal-bg" onclick="cerrarModal(event)">
+    <div class="cal-modal">
+      <button class="cal-modal-close" onclick="document.getElementById('cal-modal-bg').classList.remove('open')">✕</button>
+      <h3 id="modal-titulo">Detalle del cambio</h3>
+      <div class="cal-modal-row"><span class="cal-modal-label">Número</span><span class="cal-modal-val" id="modal-chg"></span></div>
+      <div class="cal-modal-row"><span class="cal-modal-label">Empresa</span><span class="cal-modal-val" id="modal-emp"></span></div>
+      <div class="cal-modal-row"><span class="cal-modal-label">Asunto</span><span class="cal-modal-val" id="modal-asunto"></span></div>
+      <div class="cal-modal-row"><span class="cal-modal-label">Inicio</span><span class="cal-modal-val" id="modal-ini"></span></div>
+      <div class="cal-modal-row"><span class="cal-modal-label">Fin</span><span class="cal-modal-val" id="modal-fin"></span></div>
+      <div class="cal-modal-row"><span class="cal-modal-label">Plan</span><span class="cal-modal-val" id="modal-plan"></span></div>
+      <div class="cal-modal-row"><span class="cal-modal-label">Equipos</span><span class="cal-modal-val" id="modal-eq"></span></div>
+      <div class="cal-modal-row"><span class="cal-modal-label">Observación</span><span class="cal-modal-val" id="modal-obs"></span></div>
+    </div>
   </div>
 
   <div class="legend">
@@ -399,16 +483,178 @@ let vistaActual = 'tabla';
 
 function cambiarVista(v) {
   vistaActual = v;
-  document.getElementById('vista-tabla').style.display    = v === 'tabla'    ? 'block' : 'none';
-  document.getElementById('vista-timeline').style.display = v === 'timeline' ? 'block' : 'none';
-  document.getElementById('btn-tabla').classList.toggle('active',    v === 'tabla');
-  document.getElementById('btn-timeline').classList.toggle('active', v === 'timeline');
-  document.getElementById('section-label').textContent = v === 'tabla' ? 'Listado completo de cambios' : 'Línea de tiempo de cambios';
+  document.getElementById('vista-tabla').style.display      = v === 'tabla'      ? 'block' : 'none';
+  document.getElementById('vista-timeline').style.display   = v === 'timeline'   ? 'block' : 'none';
+  document.getElementById('vista-calendario').style.display = v === 'calendario' ? 'block' : 'none';
+  document.getElementById('btn-tabla').classList.toggle('active',      v === 'tabla');
+  document.getElementById('btn-timeline').classList.toggle('active',   v === 'timeline');
+  document.getElementById('btn-calendario').classList.toggle('active', v === 'calendario');
+  document.getElementById('section-label').textContent = v === 'tabla' ? 'Listado completo de cambios' : v === 'timeline' ? 'Línea de tiempo de cambios' : 'Calendario semanal';
   if (v === 'timeline') {
     const val = document.getElementById('filtro-empresa').value;
     const rows = val ? allRows.filter(r => r.empresa === val) : allRows;
     renderTimeline(rows);
   }
+  if (v === 'calendario') {
+    const val = document.getElementById('filtro-empresa').value;
+    const rows = val ? allRows.filter(r => r.empresa === val) : allRows;
+    renderCalendario(rows);
+  }
+}
+
+// ── CALENDARIO ────────────────────────────────────────────────────────────────
+function renderCalendario(rows) {
+  const HORA_H = 60; // px por hora
+  const TOTAL_H = 24 * HORA_H; // 1440px
+  const p2 = n => String(n).padStart(2,'0');
+  const fmtHM = d => d ? `${p2(d.getHours())}:${p2(d.getMinutes())}` : '--:--';
+  const fmtFull = d => d ? `${p2(d.getDate())}/${p2(d.getMonth()+1)} ${p2(d.getHours())}:${p2(d.getMinutes())}` : '—';
+  const cruces = detectCruces(allRows);
+
+  // Calcular los 8 días (jue a jue)
+  const fechas = rows.filter(r=>r._fecha).map(r=>r._fecha);
+  if (!fechas.length) return;
+  const minF = fechas.reduce((a,b)=>a<b?a:b);
+  const iniSem = new Date(minF); iniSem.setHours(0,0,0,0);
+  const dias = [];
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(iniSem);
+    d.setDate(d.getDate() + i);
+    dias.push(d);
+  }
+
+  // Renderizar columna de horas
+  const horasCol = document.getElementById('cal-horas-col');
+  horasCol.innerHTML = '';
+  for (let h = 0; h < 24; h++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-hora-cell';
+    cell.style.height = HORA_H + 'px';
+    cell.textContent = h === 0 ? '' : `${p2(h)}:00`;
+    horasCol.appendChild(cell);
+  }
+
+  // Renderizar headers de días
+  const header = document.getElementById('cal-dias-header');
+  header.innerHTML = '';
+  const hoy = new Date();
+  dias.forEach(d => {
+    const th = document.createElement('div');
+    th.className = 'cal-dia-header';
+    th.style.flex = '1';
+    th.style.minWidth = '110px';
+    th.style.padding = '8px 10px';
+    th.style.borderRight = '1px solid #e8ebf2';
+
+    const esHoy = d.toDateString() === hoy.toDateString();
+    const numDiv = document.createElement('div');
+    numDiv.className = 'cal-dia-num' + (esHoy ? ' hoy' : '');
+    numDiv.textContent = d.getDate();
+
+    const nomDiv = document.createElement('div');
+    nomDiv.className = 'cal-dia-nombre';
+    nomDiv.textContent = DIAS[d.getDay()];
+
+    th.appendChild(numDiv);
+    th.appendChild(nomDiv);
+    header.appendChild(th);
+  });
+
+  // Renderizar cuerpo del calendario
+  const body = document.getElementById('cal-body');
+  body.innerHTML = '';
+  body.style.position = 'relative';
+  body.style.height = TOTAL_H + 'px';
+
+  dias.forEach((dia, di) => {
+    const col = document.createElement('div');
+    col.style.cssText = `flex:1; min-width:110px; border-right:1px solid #e8ebf2; position:relative; height:${TOTAL_H}px;`;
+
+    // Líneas de hora
+    for (let h = 0; h < 24; h++) {
+      const line = document.createElement('div');
+      line.style.cssText = `position:absolute; left:0; right:0; top:${h*HORA_H}px; border-top:1px solid ${h % 1 === 0 ? '#f0f2f7' : '#f8f9fc'};`;
+      col.appendChild(line);
+    }
+
+    // Eventos del día
+    const diaRows = rows.filter(r => {
+      if (!r._fecha) return false;
+      const rd = new Date(r._fecha); rd.setHours(0,0,0,0);
+      return rd.getTime() === dia.getTime();
+    });
+
+    // Detectar solapamientos para offset horizontal
+    diaRows.sort((a,b) => a._fecha - b._fecha);
+    const slots = [];
+    diaRows.forEach(r => {
+      const ini = r._fecha;
+      const fin = r._fechafin || new Date(ini.getTime() + 60*60*1000);
+      let slot = 0;
+      while (slots[slot] && slots[slot] > ini.getTime()) slot++;
+      slots[slot] = fin.getTime();
+
+      const top = (ini.getHours() * 60 + ini.getMinutes()) / 60 * HORA_H;
+      const durMin = Math.max((fin - ini) / 60000, 30);
+      const height = Math.max(durMin / 60 * HORA_H, 28);
+
+      const esCruce = cruces.has(r.numero);
+      const eq = equipoLider(r.equipo);
+      const eqCls = esCruce ? 'ev-cruce' : eq === 'infra' ? 'ev-infra' : (r.equipo||'').toLowerCase().includes('cliente') ? 'ev-basis-cli' : 'ev-basis';
+
+      const ev = document.createElement('div');
+      ev.className = `cal-evento ${eqCls}`;
+      ev.style.top  = `${top}px`;
+      ev.style.height = `${height}px`;
+      // Offset si hay solapamiento
+      const totalSlots = Math.max(...slots.map((_,i)=>i+1));
+      if (slot > 0) {
+        ev.style.left  = `${3 + slot * 30}px`;
+        ev.style.right = '3px';
+      }
+
+      ev.innerHTML = `
+        <div class="cal-evento-chg">${r.numero}</div>
+        <div class="cal-evento-emp">${r.empresa}</div>
+        ${height > 40 ? `<div class="cal-evento-hora">${fmtHM(r._fecha)}${r._fechafin ? ' – '+fmtHM(r._fechafin) : ''}</div>` : ''}
+      `;
+
+      ev.addEventListener('click', () => {
+        document.getElementById('modal-titulo').textContent = r.empresa;
+        document.getElementById('modal-chg').textContent    = r.numero;
+        document.getElementById('modal-emp').textContent    = r.empresa;
+        document.getElementById('modal-asunto').textContent = r.asunto;
+        document.getElementById('modal-ini').textContent    = fmtFull(r._fecha);
+        document.getElementById('modal-fin').textContent    = fmtFull(r._fechafin);
+        document.getElementById('modal-plan').textContent   = r.plan || '—';
+        document.getElementById('modal-eq').textContent     = r.equipo || '—';
+        document.getElementById('modal-obs').textContent    = r.observacion || '—';
+        document.getElementById('cal-modal-bg').classList.add('open');
+      });
+
+      col.appendChild(ev);
+    });
+
+    body.appendChild(col);
+  });
+
+  // Línea de hora actual
+  const ahora = new Date();
+  const topAhora = (ahora.getHours() * 60 + ahora.getMinutes()) / 60 * HORA_H;
+  const lineaHora = document.createElement('div');
+  lineaHora.className = 'cal-linea-hora';
+  lineaHora.style.top = `${topAhora}px`;
+  body.appendChild(lineaHora);
+
+  // Scroll automático a la hora actual
+  setTimeout(() => {
+    const scroll = document.getElementById('cal-scroll');
+    scroll.scrollTop = Math.max(topAhora - 100, 0);
+  }, 100);
+}
+
+function cerrarModal(e) {
+  if (e.target.id === 'cal-modal-bg') document.getElementById('cal-modal-bg').classList.remove('open');
 }
 
 function renderTimeline(rows) {
