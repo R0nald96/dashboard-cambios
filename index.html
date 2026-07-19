@@ -249,7 +249,6 @@
     <div class="loading" id="loading">Cargando datos desde Google Sheets...</div>
     <table id="tabla" style="display:none;">
       <colgroup>
-        <col style="width:32px">
         <col style="width:100px">
         <col style="width:100px">
         <col style="width:140px">
@@ -260,7 +259,6 @@
       </colgroup>
       <thead>
         <tr>
-          <th>🚦</th>
           <th>Número</th>
           <th>Fecha / Hora</th>
           <th>Empresa</th>
@@ -513,7 +511,6 @@ function renderTabla(rows) {
       const tr = document.createElement('tr');
       if (esCruce) tr.className = 'cruce-row';
       tr.innerHTML = `
-        <td>${semaforo(r, cruces)}</td>
         <td><span class="chg">${r.numero}</span></td>
         <td>${fechaHTML}</td>
         <td><span class="empresa">${r.empresa}</span></td>
@@ -550,7 +547,6 @@ function renderTabla(rows) {
       const tr = document.createElement('tr');
       if (esCruce) tr.className = 'cruce-row';
       tr.innerHTML = `
-        <td>${semaforo(r, cruces)}</td>
         <td><span class="chg">${r.numero}</span></td>
         <td>${fechaHTML}</td>
         <td><span class="empresa">${r.empresa}</span></td>
