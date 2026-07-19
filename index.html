@@ -79,6 +79,56 @@
   .tl-asun { font-size: 11px; color: #6b7280; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   @media (max-width: 700px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .header { flex-direction: column; gap: 8px; } .header-meta { text-align: left; } }
 
+  /* Semáforo */
+  .semaforo { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; }
+  .sem-verde   { background:#e1f5ee; color:#085041; }
+  .sem-amarillo{ background:#fff8e1; color:#7a5c00; }
+  .sem-rojo    { background:#fcebeb; color:#791f1f; }
+  .sem-dot     { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .sem-dot-verde    { background:#22c55e; }
+  .sem-dot-amarillo { background:#f59e0b; }
+  .sem-dot-rojo     { background:#ef4444; }
+
+  /* Modo presentación */
+  .pres-btn { font-size:11px; font-weight:600; padding:5px 12px; border-radius:6px; border:1px solid #d8dce6; background:#f8f9fc; color:#3b4a6b; cursor:pointer; display:flex; align-items:center; gap:5px; }
+  .pres-btn:hover { background:#e8ebf2; }
+  body.presentacion { padding:0; background:#1a1b1e; }
+  body.presentacion .container { max-width:100%; padding:16px; }
+  body.presentacion .header { border-color:#2e2f35; }
+  body.presentacion .header-title { color:#e8e8e8; font-size:24px; }
+  body.presentacion .header-sub, body.presentacion .header-meta { color:#666; }
+  body.presentacion .kpi { background:#22232a; border-color:#2e2f35; }
+  body.presentacion .kpi-val { color:#e8e8e8; }
+  body.presentacion .kpi-label, body.presentacion .kpi-sub { color:#666; }
+  body.presentacion .alerta { background:#2a1f1f; border-color:#6b2f2f; color:#e08080; }
+  body.presentacion .vista-btn { background:#22232a; border-color:#3a3b42; color:#888; }
+  body.presentacion .vista-btn.active { background:#4a90d9; border-color:#4a90d9; color:#fff; }
+  body.presentacion .table-wrap, body.presentacion #vista-calendario > div { background:#22232a; border-color:#2e2f35; }
+  body.presentacion thead th { background:#1e1f25; color:#555; border-color:#2e2f35; }
+  body.presentacion tbody tr { border-color:#28292f; }
+  body.presentacion tbody td { color:#c9cdd4; }
+  body.presentacion .day-header td { background:#1e1f25; color:#555; }
+  body.presentacion .empresa { color:#e8e8e8; }
+  body.presentacion .asunto-text, body.presentacion .fecha-text { color:#888; }
+  body.presentacion .filtro-select { background:#22232a; border-color:#3a3b42; color:#c9cdd4; }
+  body.presentacion .filtro-label { color:#666; }
+  body.presentacion .section-title { color:#555; }
+  body.presentacion .tl-card { background:#22232a; border-color:#2e2f35; }
+  body.presentacion .tl-emp { color:#e8e8e8; }
+  body.presentacion .tl-asun { color:#888; }
+  body.presentacion .cal-dia-nombre { color:#666; }
+  body.presentacion .cal-dia-num { color:#4a90d9; }
+  body.presentacion #cal-horas-col .cal-hora-cell { background:#1e1f25; color:#444; }
+
+  /* Zoom horas */
+  .zoom-btn { font-size:10px; font-weight:600; padding:3px 10px; border-radius:5px; border:1px solid #d8dce6; background:#f8f9fc; color:#6b7280; cursor:pointer; }
+  .zoom-btn.active { background:#3b4a6b; color:#fff; border-color:#3b4a6b; }
+
+  /* Notas */
+  .nota-area { width:100%; border:1px solid #d8dce6; border-radius:6px; padding:8px; font-size:12px; font-family:inherit; color:#2c2f36; background:#f8f9fc; resize:vertical; min-height:60px; margin-top:4px; }
+  .nota-area:focus { outline:none; border-color:#4a90d9; }
+  .nota-guardada { font-size:10px; color:#22c55e; margin-top:4px; display:none; }
+
   /* ── CALENDARIO ── */
   .cal-wrap { display: flex; border: 1px solid #d8dce6; border-radius: 10px; overflow: hidden; background: #f8f9fc; }
   .cal-horas { width: 52px; flex-shrink: 0; border-right: 1px solid #e8ebf2; background: #f0f2f7; }
@@ -131,7 +181,8 @@
       <p class="header-title" id="titulo">Cargando dashboard...</p>
       <p class="header-sub" id="ventana"></p>
     </div>
-    <div class="header-meta">
+    <div class="header-meta" style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+      <button class="pres-btn" onclick="togglePresentacion()" id="btn-pres">⛶ Modo presentación</button>
       <div id="exportado"></div>
       <div id="reunion"></div>
     </div>
@@ -198,6 +249,7 @@
     <div class="loading" id="loading">Cargando datos desde Google Sheets...</div>
     <table id="tabla" style="display:none;">
       <colgroup>
+        <col style="width:32px">
         <col style="width:100px">
         <col style="width:100px">
         <col style="width:140px">
@@ -208,6 +260,7 @@
       </colgroup>
       <thead>
         <tr>
+          <th>🚦</th>
           <th>Número</th>
           <th>Fecha / Hora</th>
           <th>Empresa</th>
@@ -230,6 +283,21 @@
 
   <!-- VISTA CALENDARIO -->
   <div id="vista-calendario" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span style="font-size:11px; color:#8a90a0; font-weight:500;">Zoom horas:</span>
+        <button class="zoom-btn active" id="zoom-all"    onclick="setZoom('all')">Todo el día</button>
+        <button class="zoom-btn"        id="zoom-mañana" onclick="setZoom('mañana')">Mañana (06–14)</button>
+        <button class="zoom-btn"        id="zoom-tarde"  onclick="setZoom('tarde')">Tarde (14–22)</button>
+        <button class="zoom-btn"        id="zoom-noche"  onclick="setZoom('noche')">Noche (22–06)</button>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span style="font-size:11px; color:#8a90a0; font-weight:500;">Resaltar equipo:</span>
+        <button class="zoom-btn active" id="flt-todos"  onclick="setFiltroEquipoCal('todos')">Todos</button>
+        <button class="zoom-btn"        id="flt-basis"  onclick="setFiltroEquipoCal('basis')">Basis</button>
+        <button class="zoom-btn"        id="flt-infra"  onclick="setFiltroEquipoCal('infra')">Infraestructura</button>
+      </div>
+    </div>
     <div style="height:640px; overflow-y:auto; overflow-x:auto; border:1px solid #d8dce6; border-radius:10px; background:#f8f9fc;" id="cal-scroll">
       <div style="display:flex; min-width:1500px;">
         <!-- Columna de horas fija -->
@@ -265,6 +333,11 @@
       <div class="cal-modal-row"><span class="cal-modal-label">Plan</span><span class="cal-modal-val" id="modal-plan"></span></div>
       <div class="cal-modal-row"><span class="cal-modal-label">Equipos</span><span class="cal-modal-val" id="modal-eq"></span></div>
       <div class="cal-modal-row"><span class="cal-modal-label">Observación</span><span class="cal-modal-val" id="modal-obs"></span></div>
+      <div style="margin-top:12px;">
+        <span class="cal-modal-label" style="display:block;margin-bottom:4px;">📝 Notas de reunión</span>
+        <textarea class="nota-area" id="modal-nota" placeholder="Agrega notas durante la reunión..."></textarea>
+        <div class="nota-guardada" id="nota-guardada">✓ Guardado</div>
+      </div>
     </div>
   </div>
 
@@ -349,6 +422,17 @@ function detectCruces(rows) {
 }
 
 
+// ── SEMÁFORO ─────────────────────────────────────────────────────────────────
+function semaforo(row, cruces) {
+  const esCruce = cruces.has(row.numero);
+  const obs = (row.observacion||'').trim().toLowerCase();
+  const tienePlan = (row.plan||'').trim() !== '';
+  if (esCruce) return `<span class="semaforo sem-rojo"><span class="sem-dot sem-dot-rojo"></span>Alto</span>`;
+  if (obs) return `<span class="semaforo sem-amarillo"><span class="sem-dot sem-dot-amarillo"></span>Medio</span>`;
+  if (!tienePlan) return `<span class="semaforo sem-amarillo"><span class="sem-dot sem-dot-amarillo"></span>Medio</span>`;
+  return `<span class="semaforo sem-verde"><span class="sem-dot sem-dot-verde"></span>OK</span>`;
+}
+
 function obsBadge(obs) {
   const o = (obs||'').trim().toLowerCase();
   if (!o) return `<span class="badge badge-ok">OK</span>`;
@@ -429,6 +513,7 @@ function renderTabla(rows) {
       const tr = document.createElement('tr');
       if (esCruce) tr.className = 'cruce-row';
       tr.innerHTML = `
+        <td>${semaforo(r, cruces)}</td>
         <td><span class="chg">${r.numero}</span></td>
         <td>${fechaHTML}</td>
         <td><span class="empresa">${r.empresa}</span></td>
@@ -465,6 +550,7 @@ function renderTabla(rows) {
       const tr = document.createElement('tr');
       if (esCruce) tr.className = 'cruce-row';
       tr.innerHTML = `
+        <td>${semaforo(r, cruces)}</td>
         <td><span class="chg">${r.numero}</span></td>
         <td>${fechaHTML}</td>
         <td><span class="empresa">${r.empresa}</span></td>
@@ -600,6 +686,7 @@ function renderCalendario(rows) {
 
       const esCruce = cruces.has(r.numero);
       const eq = equipoLider(r.equipo);
+      const semColor = esCruce ? '#ef4444' : (r.observacion||'').trim() ? '#f59e0b' : '#22c55e';
       const eqCls = esCruce ? 'ev-cruce' : eq === 'infra' ? 'ev-infra' : (r.equipo||'').toLowerCase().includes('cliente') ? 'ev-basis-cli' : 'ev-basis';
 
       const ev = document.createElement('div');
@@ -614,7 +701,10 @@ function renderCalendario(rows) {
       }
 
       ev.innerHTML = `
-        <div class="cal-evento-chg">${r.numero}</div>
+        <div style="display:flex;align-items:center;gap:3px;margin-bottom:1px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:${semColor};flex-shrink:0;"></span>
+          <span class="cal-evento-chg">${r.numero}</span>
+        </div>
         <div class="cal-evento-emp">${r.empresa}</div>
         ${height > 40 ? `<div class="cal-evento-hora">${fmtHM(r._fecha)}${r._fechafin ? ' – '+fmtHM(r._fechafin) : ''}</div>` : ''}
       `;
@@ -629,6 +719,10 @@ function renderCalendario(rows) {
         document.getElementById('modal-plan').textContent   = r.plan || '—';
         document.getElementById('modal-eq').textContent     = r.equipo || '—';
         document.getElementById('modal-obs').textContent    = r.observacion || '—';
+        notaChgActual = r.numero;
+        const notaGuardada = localStorage.getItem('nota_' + r.numero) || '';
+        document.getElementById('modal-nota').value = notaGuardada;
+        document.getElementById('nota-guardada').style.display = 'none';
         document.getElementById('cal-modal-bg').classList.add('open');
       });
 
@@ -652,6 +746,71 @@ function renderCalendario(rows) {
     scroll.scrollTop = Math.max(topAhora - 100, 0);
   }, 100);
 }
+
+// ── MODO PRESENTACIÓN ────────────────────────────────────────────────────────
+let enPresentacion = false;
+function togglePresentacion() {
+  enPresentacion = !enPresentacion;
+  document.body.classList.toggle('presentacion', enPresentacion);
+  document.getElementById('btn-pres').textContent = enPresentacion ? '✕ Salir presentación' : '⛶ Modo presentación';
+  if (enPresentacion) {
+    document.documentElement.requestFullscreen?.();
+  } else {
+    document.exitFullscreen?.();
+  }
+}
+
+// ── ZOOM HORAS CALENDARIO ────────────────────────────────────────────────────
+let zoomActual = 'all';
+function setZoom(z) {
+  zoomActual = z;
+  ['all','mañana','tarde','noche'].forEach(id => {
+    document.getElementById('zoom-' + id)?.classList.toggle('active', id === z);
+  });
+  const scroll = document.getElementById('cal-scroll');
+  if (!scroll) return;
+  const HORA_H = 60;
+  const targets = { all: 0, mañana: 6, tarde: 14, noche: 22 };
+  scroll.scrollTop = targets[z] * HORA_H;
+}
+
+// ── FILTRO EQUIPO CALENDARIO ─────────────────────────────────────────────────
+let filtroEquipoCal = 'todos';
+function setFiltroEquipoCal(eq) {
+  filtroEquipoCal = eq;
+  ['todos','basis','infra'].forEach(id => {
+    document.getElementById('flt-' + id)?.classList.toggle('active', id === eq);
+  });
+  document.querySelectorAll('.cal-evento').forEach(ev => {
+    if (eq === 'todos') {
+      ev.style.opacity = '1';
+    } else if (eq === 'basis') {
+      ev.style.opacity = ev.classList.contains('ev-basis') || ev.classList.contains('ev-basis-cli') ? '1' : '0.2';
+    } else {
+      ev.style.opacity = ev.classList.contains('ev-infra') ? '1' : '0.2';
+    }
+  });
+}
+
+// ── NOTAS POR CAMBIO ─────────────────────────────────────────────────────────
+let notaTimeout;
+let notaChgActual = '';
+document.addEventListener('DOMContentLoaded', () => {
+  const notaArea = document.getElementById('modal-nota');
+  if (notaArea) {
+    notaArea.addEventListener('input', () => {
+      clearTimeout(notaTimeout);
+      notaTimeout = setTimeout(() => {
+        if (notaChgActual) {
+          localStorage.setItem('nota_' + notaChgActual, notaArea.value);
+          const guardada = document.getElementById('nota-guardada');
+          guardada.style.display = 'block';
+          setTimeout(() => guardada.style.display = 'none', 2000);
+        }
+      }, 800);
+    });
+  }
+});
 
 function cerrarModal(e) {
   if (e.target.id === 'cal-modal-bg') document.getElementById('cal-modal-bg').classList.remove('open');
