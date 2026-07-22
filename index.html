@@ -582,14 +582,19 @@ function cambiarVista(v) {
 
 // ── CALENDARIO ────────────────────────────────────────────────────────────────
 function renderCalendario(rows) {
-  const HORA_H = 60; // px por hora
-  const TOTAL_H = 24 * HORA_H; // 1440px
+  const HORA_H = 60;
+  const TOTAL_H = 24 * HORA_H;
   const p2 = n => String(n).padStart(2,'0');
   const fmtHM = d => d ? `${p2(d.getHours())}:${p2(d.getMinutes())}` : '--:--';
   const fmtFull = d => d ? `${p2(d.getDate())}/${p2(d.getMonth()+1)} ${p2(d.getHours())}:${p2(d.getMinutes())}` : '—';
   const cruces = detectCruces(allRows);
 
-  // Inicio del calendario = desde el primer dato real (puede ser antes del jueves oficial)
+  // Calcular minF dentro de esta función
+  const fechasCal = rows.filter(r=>r._fecha).map(r=>r._fecha);
+  if (!fechasCal.length) return;
+  const minF = fechasCal.reduce((a,b)=>a<b?a:b);
+
+  // Inicio del calendario = desde el primer dato real
   const calIni = new Date(minF); calIni.setHours(0,0,0,0);
 
   // Fin = jueves más cercano al minF + 7 días
