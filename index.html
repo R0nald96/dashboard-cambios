@@ -129,7 +129,9 @@
   }
   .cal-evento:hover { opacity: 0.85; filter: brightness(1.05); }
   .cal-evento.ev-basis      { background: #eeedfe; color: #3c3489; border-left-color: #7c6fe0; }
+  .cal-evento.ev-basis-infra{ background: #eeedfe; color: #3c3489; border-left-color: #7c6fe0; }
   .cal-evento.ev-infra      { background: #e6f1fb; color: #0c447c; border-left-color: #3b82f6; }
+  .cal-evento.ev-infra-basis{ background: #e6f1fb; color: #0c447c; border-left-color: #3b82f6; }
   .cal-evento.ev-cruce      { background: #fcebeb; color: #791f1f; border-left-color: #ef4444; }
   .cal-evento.ev-basis-cli  { background: #fbeaf0; color: #72243e; border-left-color: #ec4899; }
   .cal-evento-chg  { font-size: 9px; opacity: 0.7; font-family: monospace; }
@@ -666,7 +668,12 @@ function renderCalendario(rows) {
       const esCruce = cruces.has(r.numero);
       const eq = equipoLider(r.equipo);
       const semColor = esCruce ? '#ef4444' : (r.observacion||'').trim() ? '#f59e0b' : '#22c55e';
-      const eqCls = esCruce ? 'ev-cruce' : eq === 'infra' ? 'ev-infra' : (r.equipo||'').toLowerCase().includes('cliente') ? 'ev-basis-cli' : 'ev-basis';
+      const eqCls = esCruce ? 'ev-cruce' 
+        : equipoLider(r.equipo) === 'infra' && (r.equipo||'').toLowerCase().includes('basis') ? 'ev-infra-basis'
+        : equipoLider(r.equipo) === 'infra' ? 'ev-infra'
+        : (r.equipo||'').toLowerCase().includes('cliente') ? 'ev-basis-cli'
+        : (r.equipo||'').toLowerCase().includes('infra') ? 'ev-basis-infra'
+        : 'ev-basis';
 
       const ev = document.createElement('div');
       ev.className = `cal-evento ${eqCls}`;
@@ -761,12 +768,21 @@ function setFiltroEquipoCal(eq) {
     document.getElementById('flt-' + id)?.classList.toggle('active', id === eq);
   });
   document.querySelectorAll('.cal-evento').forEach(ev => {
+    const chg = ev.querySelector('.cal-evento-chg')?.textContent?.trim();
+    const row = allRows.find(r => r.numero === chg);
     if (eq === 'todos') {
       ev.style.opacity = '1';
     } else if (eq === 'basis') {
-      ev.style.opacity = ev.classList.contains('ev-basis') || ev.classList.contains('ev-basis-cli') ? '1' : '0.2';
+      const esBasis = ev.classList.contains('ev-basis') ||
+                      ev.classList.contains('ev-basis-infra') ||
+                      ev.classList.contains('ev-basis-cli') ||
+                      (ev.classList.contains('ev-cruce') && row && equipoLider(row.equipo) === 'basis');
+      ev.style.opacity = esBasis ? '1' : '0.2';
     } else {
-      ev.style.opacity = ev.classList.contains('ev-infra') ? '1' : '0.2';
+      const esInfra = ev.classList.contains('ev-infra') ||
+                      ev.classList.contains('ev-infra-basis') ||
+                      (ev.classList.contains('ev-cruce') && row && equipoLider(row.equipo) === 'infra');
+      ev.style.opacity = esInfra ? '1' : '0.2';
     }
   });
 }
