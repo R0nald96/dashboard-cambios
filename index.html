@@ -589,7 +589,10 @@ function renderCalendario(rows) {
   const fmtFull = d => d ? `${p2(d.getDate())}/${p2(d.getMonth()+1)} ${p2(d.getHours())}:${p2(d.getMinutes())}` : '—';
   const cruces = detectCruces(allRows);
 
-  // Inicio oficial del calendario = jueves más cercano al minF (±3 días)
+  // Inicio del calendario = desde el primer dato real (puede ser antes del jueves oficial)
+  const calIni = new Date(minF); calIni.setHours(0,0,0,0);
+
+  // Fin = jueves más cercano al minF + 7 días
   const iniSem = new Date(minF); iniSem.setHours(0,0,0,0);
   let _mejorDiff = 999, _mejorDia = new Date(iniSem);
   for (let offset = -3; offset <= 3; offset++) {
@@ -600,13 +603,13 @@ function renderCalendario(rows) {
   }
   iniSem.setTime(_mejorDia.getTime());
 
-  // Fin = jueves siguiente (7 días después)
+  // Fin = jueves siguiente (7 días después del jueves oficial)
   const finSem = new Date(iniSem);
   finSem.setDate(finSem.getDate() + 7);
 
-  // Generar días del calendario de jue a jue
+  // Generar días desde el primer dato hasta el jueves fin
   const dias = [];
-  let diaActual = new Date(iniSem);
+  let diaActual = new Date(calIni);
   while (diaActual <= finSem) {
     dias.push(new Date(diaActual));
     diaActual.setDate(diaActual.getDate() + 1);
