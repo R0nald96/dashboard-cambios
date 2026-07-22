@@ -460,10 +460,15 @@ function render(rows) {
   if (fechas.length) {
     const minF = fechas.reduce((a,b)=>a<b?a:b);
     const fmt = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
-    // Ventana fin = próximo jueves después del inicio (día 4 = jueves)
+    // Ventana fin = siempre el jueves siguiente al inicio (mínimo 7 días adelante)
     const finV = new Date(minF);
-    const diasHastaJueves = (4 - finV.getDay() + 7) % 7 || 7; // si ya es jueves, ir al siguiente
-    finV.setDate(finV.getDate() + diasHastaJueves);
+    // Buscar el próximo jueves con al menos 6 días de distancia
+    let diasSumar = 1;
+    while (diasSumar < 7 || new Date(finV.getTime() + diasSumar * 86400000).getDay() !== 4) {
+      diasSumar++;
+      if (diasSumar > 14) break;
+    }
+    finV.setDate(finV.getDate() + diasSumar);
     finV.setHours(23, 59, 0, 0);
     const mes = d => MESES[d.getMonth()].charAt(0).toUpperCase() + MESES[d.getMonth()].slice(1,3);
     document.getElementById('titulo').textContent = `Cambios del ${fmt(minF)} ${mes(minF)} al ${fmt(finV)} ${mes(finV)} ${finV.getFullYear()}`;
