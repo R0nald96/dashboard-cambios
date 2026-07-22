@@ -438,20 +438,31 @@ function render(rows) {
   if (fechas.length) {
     const minF = fechas.reduce((a,b)=>a<b?a:b);
     const fmt = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
-    // Ventana fin = siempre el jueves siguiente al inicio (mínimo 7 días adelante)
-    const finV = new Date(minF);
-    // Buscar el próximo jueves con al menos 6 días de distancia
-    let diasSumar = 1;
-    while (diasSumar < 7 || new Date(finV.getTime() + diasSumar * 86400000).getDay() !== 4) {
-      diasSumar++;
-      if (diasSumar > 14) break;
-    }
-    finV.setDate(finV.getDate() + diasSumar);
-    finV.setHours(23, 59, 0, 0);
     const mes = d => MESES[d.getMonth()].charAt(0).toUpperCase() + MESES[d.getMonth()].slice(1,3);
-    document.getElementById('titulo').textContent = `Cambios del ${fmt(minF)} ${mes(minF)} al ${fmt(finV)} ${mes(finV)} ${finV.getFullYear()}`;
-    document.getElementById('ventana').textContent = `Ventana: ${DIAS[minF.getDay()]} ${fmt(minF)} 11:00 AM → ${DIAS[finV.getDay()]} ${fmt(finV)} 23:59 PM`;
-    document.getElementById('reunion').textContent = `Reunión: ${DIAS[minF.getDay()]} ${fmt(minF)}/${minF.getFullYear()}`;
+
+    // Inicio oficial = jueves más cercano al minF (±3 días)
+    const iniV = new Date(minF);
+    iniV.setHours(0,0,0,0);
+    // Buscar el jueves más cercano dentro de ±3 días
+    let mejorDiff = 999, mejorDia = new Date(iniV);
+    for (let offset = -3; offset <= 3; offset++) {
+      const candidato = new Date(iniV);
+      candidato.setDate(candidato.getDate() + offset);
+      if (candidato.getDay() === 4) {
+        const diff = Math.abs(offset);
+        if (diff < mejorDiff) { mejorDiff = diff; mejorDia = candidato; }
+      }
+    }
+    iniV.setTime(mejorDia.getTime());
+
+    // Fin oficial = jueves siguiente (7 días después del inicio)
+    const finV = new Date(iniV);
+    finV.setDate(finV.getDate() + 7);
+    finV.setHours(23, 59, 0, 0);
+
+    document.getElementById('titulo').textContent = `Cambios del ${fmt(iniV)} ${mes(iniV)} al ${fmt(finV)} ${mes(finV)} ${finV.getFullYear()}`;
+    document.getElementById('ventana').textContent = `Ventana: ${DIAS[iniV.getDay()]} ${fmt(iniV)} 11:00 AM → ${DIAS[finV.getDay()]} ${fmt(finV)} 23:59 PM`;
+    document.getElementById('reunion').textContent = `Reunión: ${DIAS[iniV.getDay()]} ${fmt(iniV)}/${iniV.getFullYear()}`;
   }
 
   const hoy = new Date();
@@ -578,16 +589,27 @@ function renderCalendario(rows) {
   const fmtFull = d => d ? `${p2(d.getDate())}/${p2(d.getMonth()+1)} ${p2(d.getHours())}:${p2(d.getMinutes())}` : '—';
   const cruces = detectCruces(allRows);
 
-  // Calcular los 8 días (jue a jue)
-  const fechas = rows.filter(r=>r._fecha).map(r=>r._fecha);
-  if (!fechas.length) return;
-  const minF = fechas.reduce((a,b)=>a<b?a:b);
+  // Inicio oficial del calendario = jueves más cercano al minF (±3 días)
   const iniSem = new Date(minF); iniSem.setHours(0,0,0,0);
+  let _mejorDiff = 999, _mejorDia = new Date(iniSem);
+  for (let offset = -3; offset <= 3; offset++) {
+    const cand = new Date(iniSem); cand.setDate(cand.getDate() + offset);
+    if (cand.getDay() === 4 && Math.abs(offset) < _mejorDiff) {
+      _mejorDiff = Math.abs(offset); _mejorDia = cand;
+    }
+  }
+  iniSem.setTime(_mejorDia.getTime());
+
+  // Fin = jueves siguiente (7 días después)
+  const finSem = new Date(iniSem);
+  finSem.setDate(finSem.getDate() + 7);
+
+  // Generar días del calendario de jue a jue
   const dias = [];
-  for (let i = 0; i < 8; i++) {
-    const d = new Date(iniSem);
-    d.setDate(d.getDate() + i);
-    dias.push(d);
+  let diaActual = new Date(iniSem);
+  while (diaActual <= finSem) {
+    dias.push(new Date(diaActual));
+    diaActual.setDate(diaActual.getDate() + 1);
   }
 
   // Renderizar columna de horas
