@@ -398,6 +398,28 @@ function detectCruces(rows) {
 }
 
 
+// ── CLIENTES EXTERIOR ────────────────────────────────────────────────────────
+const EXTERIOR_KEYS = [
+  'marathon','hivimar','pica','sica','femar','servientrega','buitrago','mareauto',
+  'chaide','duragas','ordeño','grupasa','intercia','ipac','ecuajugos','kfc',
+  'bagó','bago','nutrileche','nuo','interoc','banasan','flar','petromil',
+  'mayagüez','mayaguez','mazda','mineros','positiva','distracom','biomax',
+  'rappi','rio paila','adama','fundacion svp','colvatel','copetran','imec',
+  'risaralda','microplast','emsa','buena ventura','metalpren','implantes',
+  'industrias emu','ciamsa','pichinchi','toyota','corpetrolsa','simco','carvomax'
+];
+
+function esExterior(empresa) {
+  const e = (empresa||'').toLowerCase();
+  return EXTERIOR_KEYS.some(k => e.includes(k));
+}
+
+function badgePais(empresa) {
+  return esExterior(empresa)
+    ? `<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:#e0f2fe;color:#0369a1;flex-shrink:0;">🌎 Ext</span>`
+    : `<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:#fef9c3;color:#854d0e;flex-shrink:0;">🇵🇪 PE</span>`;
+}
+
 // ── SEMÁFORO ─────────────────────────────────────────────────────────────────
 function semaforo(row, cruces) {
   const esCruce = cruces.has(row.numero);
@@ -509,7 +531,7 @@ function renderTabla(rows) {
       tr.innerHTML = `
         <td><span class="chg">${r.numero}</span></td>
         <td>${fechaHTML}</td>
-        <td><span class="empresa">${r.empresa}</span></td>
+        <td><span style="display:flex;align-items:center;gap:5px;"><span class="empresa">${r.empresa}</span>${badgePais(r.empresa)}</span></td>
         <td><span class="asunto-text">${r.asunto}</span></td>
         <td>${planBadge}</td>
         <td><span class="eq ${equipoClass(r.equipo)}">${equipoLabel(r.equipo)}</span></td>
@@ -545,7 +567,7 @@ function renderTabla(rows) {
       tr.innerHTML = `
         <td><span class="chg">${r.numero}</span></td>
         <td>${fechaHTML}</td>
-        <td><span class="empresa">${r.empresa}</span></td>
+        <td><span style="display:flex;align-items:center;gap:5px;"><span class="empresa">${r.empresa}</span>${badgePais(r.empresa)}</span></td>
         <td><span class="asunto-text">${r.asunto}</span></td>
         <td>${planBadge}</td>
         <td><span class="eq ${equipoClass(r.equipo)}">${equipoLabel(r.equipo)}</span></td>
@@ -945,12 +967,33 @@ function filtrarEmpresa() { aplicarFiltros(); }
 
 function poblarFiltro(rows) {
   const empresas = [...new Set(rows.map(r => r.empresa))].sort();
+  const peru     = empresas.filter(e => !esExterior(e));
+  const exterior = empresas.filter(e =>  esExterior(e));
   const sel = document.getElementById('filtro-empresa');
-  empresas.forEach(e => {
-    const opt = document.createElement('option');
-    opt.value = e; opt.textContent = e;
-    sel.appendChild(opt);
-  });
+
+  // Grupo Perú
+  if (peru.length) {
+    const grpPE = document.createElement('optgroup');
+    grpPE.label = '🇵🇪 Perú';
+    peru.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e; opt.textContent = e;
+      grpPE.appendChild(opt);
+    });
+    sel.appendChild(grpPE);
+  }
+
+  // Grupo Exterior
+  if (exterior.length) {
+    const grpExt = document.createElement('optgroup');
+    grpExt.label = '🌎 Exterior';
+    exterior.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e; opt.textContent = e;
+      grpExt.appendChild(opt);
+    });
+    sel.appendChild(grpExt);
+  }
 }
 
 fetch(JSON_URL)
