@@ -204,6 +204,12 @@
       <select class="filtro-select" id="filtro-empresa" onchange="aplicarFiltros()">
         <option value="">Todos los clientes</option>
       </select>
+      <span class="filtro-label" style="margin-left:12px;">País:</span>
+      <select class="filtro-select" id="filtro-pais" onchange="aplicarFiltros()" style="min-width:120px;">
+        <option value="">Todos</option>
+        <option value="peru">🇵🇪 Perú</option>
+        <option value="exterior">🌎 Exterior</option>
+      </select>
       <span class="filtro-label" style="margin-left:12px;">Equipo:</span>
       <select class="filtro-select" id="filtro-equipo" onchange="aplicarFiltros()">
         <option value="">Todos los equipos</option>
@@ -405,7 +411,7 @@ const EXTERIOR_KEYS = [
   'bagó','bago','nutrileche','nuo','interoc','banasan','flar','petromil',
   'mayagüez','mayaguez','mazda','mineros','positiva','distracom','biomax',
   'rappi','rio paila','adama','fundacion svp','colvatel','copetran','imec',
-  'risaralda','microplast','emsa','buena ventura','metalpren','implantes',
+  'risaralda','microplast','emsa','buena ventura','implantes',
   'industrias emu','ciamsa','pichinchi','toyota','corpetrolsa','simco','carvomax'
 ];
 
@@ -531,7 +537,7 @@ function renderTabla(rows) {
       tr.innerHTML = `
         <td><span class="chg">${r.numero}</span></td>
         <td>${fechaHTML}</td>
-        <td><span style="display:flex;align-items:center;gap:5px;"><span class="empresa">${r.empresa}</span>${badgePais(r.empresa)}</span></td>
+        <td><span class="empresa">${r.empresa}</span></td>
         <td><span class="asunto-text">${r.asunto}</span></td>
         <td>${planBadge}</td>
         <td><span class="eq ${equipoClass(r.equipo)}">${equipoLabel(r.equipo)}</span></td>
@@ -567,7 +573,7 @@ function renderTabla(rows) {
       tr.innerHTML = `
         <td><span class="chg">${r.numero}</span></td>
         <td>${fechaHTML}</td>
-        <td><span style="display:flex;align-items:center;gap:5px;"><span class="empresa">${r.empresa}</span>${badgePais(r.empresa)}</span></td>
+        <td><span class="empresa">${r.empresa}</span></td>
         <td><span class="asunto-text">${r.asunto}</span></td>
         <td>${planBadge}</td>
         <td><span class="eq ${equipoClass(r.equipo)}">${equipoLabel(r.equipo)}</span></td>
@@ -946,10 +952,13 @@ function renderTimeline(rows) {
 function aplicarFiltros() {
   const empresa = document.getElementById('filtro-empresa').value;
   const equipo  = document.getElementById('filtro-equipo').value;
+  const pais    = document.getElementById('filtro-pais')?.value || '';
 
   let filtered = allRows;
   if (empresa) filtered = filtered.filter(r => r.empresa === empresa);
   if (equipo)  filtered = filtered.filter(r => equipoLider(r.equipo) === equipo);
+  if (pais === 'peru')     filtered = filtered.filter(r => !esExterior(r.empresa));
+  if (pais === 'exterior') filtered = filtered.filter(r =>  esExterior(r.empresa));
 
   const total = filtered.length;
   document.getElementById('filtro-count').textContent = (empresa || equipo)
@@ -967,33 +976,12 @@ function filtrarEmpresa() { aplicarFiltros(); }
 
 function poblarFiltro(rows) {
   const empresas = [...new Set(rows.map(r => r.empresa))].sort();
-  const peru     = empresas.filter(e => !esExterior(e));
-  const exterior = empresas.filter(e =>  esExterior(e));
   const sel = document.getElementById('filtro-empresa');
-
-  // Grupo Perú
-  if (peru.length) {
-    const grpPE = document.createElement('optgroup');
-    grpPE.label = '🇵🇪 Perú';
-    peru.forEach(e => {
-      const opt = document.createElement('option');
-      opt.value = e; opt.textContent = e;
-      grpPE.appendChild(opt);
-    });
-    sel.appendChild(grpPE);
-  }
-
-  // Grupo Exterior
-  if (exterior.length) {
-    const grpExt = document.createElement('optgroup');
-    grpExt.label = '🌎 Exterior';
-    exterior.forEach(e => {
-      const opt = document.createElement('option');
-      opt.value = e; opt.textContent = e;
-      grpExt.appendChild(opt);
-    });
-    sel.appendChild(grpExt);
-  }
+  empresas.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e; opt.textContent = e;
+    sel.appendChild(opt);
+  });
 }
 
 fetch(JSON_URL)
